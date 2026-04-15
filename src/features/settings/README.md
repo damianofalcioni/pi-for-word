@@ -1,13 +1,11 @@
 # settings
 
-Purpose: Serialize and persist **PiWordSettings** (provider, model, API key, optional proxy) in `localStorage`.
+Purpose: **Legacy** `PiWordSettings` shape and `localStorage` helpers (`SETTINGS_KEY`, `parseSettings`, `serializeSettings`, etc.) used for **one-time migration** into **`@mariozechner/pi-web-ui`** IndexedDB stores (see `task-pane/pi-web-storage.js`). **`legacy-settings-validation.js`** holds the same validation rules as the old connection form for tests and reference.
 
-Public API: `SETTINGS_KEY`, `DEFAULT_SETTINGS`, `parseSettings`, `serializeSettings`, `loadSettings`, `saveSettings` — inputs/outputs are JSON strings and `PiWordSettings` objects.
+**`pi4word-proxy-tab.js`** — custom Settings tab for Pi Agent **`streamProxy`** (base URL + Bearer token), separate from the pi-web-ui **CORS Proxy** tab.
 
-Side effects: read/write `Storage` only via the `storage` argument passed in.
+Public API: `SETTINGS_KEY`, `DEFAULT_SETTINGS`, `parseSettings`, `serializeSettings`, `loadSettings`, `saveSettings`; `validateLegacySettingsForRun` in `legacy-settings-validation.js`.
 
-State: None global; callers inject `localStorage` (or test doubles).
+Side effects: read/write `Storage` only via the `storage` argument passed in (legacy path).
 
-Flow: `loadSettings` → `parseSettings` → merged object; `saveSettings` → `serializeSettings` → `setItem`.
-
-Tests: `settings-storage.test.js` (parse/serialize/roundtrip).
+Tests: `settings-storage.test.js`, `legacy-settings-validation.test.js`.

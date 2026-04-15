@@ -1,13 +1,13 @@
 # task-pane
 
-Purpose: Task-pane **boundary** (`task-pane.boundary.js`) — build DOM (`renderApp`), provider/model selects, form ⇄ `PiWordSettings`, chat line elements, connection validation messages. **`task-pane.init.js`** is the **entry** for the pane: `initializeTaskPane()` runs Office bootstrap and wires the agent and chat to those controls.
+Purpose: **`task-pane.boundary.js`** builds the minimal shell (`renderApp`, `setStatus`) — header, status strip, toolbar (**Settings**, **Sessions**, **New chat**), and **`#chatMount`** for **`pi-chat-panel`**. **`task-pane.init.js`** is the entry: **`initializeTaskPane()`** runs Office bootstrap, **`await initPiWebStorage()`**, **`migrateLegacyLocalStorageOnce()`**, **`ChatPanel`** + **`setAgent()`**, session autosave, and dialog wiring.
 
-Public API — boundary: `renderApp`, `setStatus`, `fillProviderSelect`, `fillModelSelect`, `readSettingsFromForm`, `applySettingsToForm`, `appendUserMessage`, `appendAssistantShell`, `appendSystemLine`, `validateSettingsForRun`. Entry: `initializeTaskPane`.
+**`pi-web-storage.js`** — IndexedDB `AppStorage` + `setAppStorage`, optional one-time migration from legacy `localStorage` (`SETTINGS_KEY`).
 
-Side effects: **`task-pane.boundary.js`** — `document` and `@mariozechner/pi-ai` catalog lists. **`task-pane.init.js`** — Office.js, `localStorage` (via settings), Pi agent subscribe/abort.
+Public API — boundary: `renderApp`, `setStatus`. Entry: `initializeTaskPane`.
 
-State: None global; reads/writes existing elements by id after `renderApp`.
+Side effects: **`task-pane.init.js`** — Office.js, IndexedDB, **`@mariozechner/pi-web-ui`** dialogs, Pi agent `subscribe` for session save.
 
-Flow: `initializeTaskPane` → mount + `renderApp` → user input → `readSettingsFromForm` / `validateSettingsForRun` → agent (`pi-assistant`).
+Flow: `initializeTaskPane` → `initPiWebStorage` → `renderApp` → mount `ChatPanel` → `setAgent` with Word tools + `ApiKeyPromptDialog` → Settings / Sessions buttons.
 
-Tests: `task-pane.boundary.test.js` (`validateSettingsForRun`).
+Tests: `src/features/settings/legacy-settings-validation.test.js` (legacy `PiWordSettings` validation used by migration semantics).

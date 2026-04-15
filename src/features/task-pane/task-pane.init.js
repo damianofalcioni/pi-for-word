@@ -1,34 +1,154 @@
-import { createWordAgent } from "../assistant/pi-assistant.js";
 import {
-  DEFAULT_SETTINGS,
-  loadSettings,
-  saveSettings,
-  serializeSettings,
-} from "../settings/settings-storage.js";
+  ApiKeyPromptDialog,
+  ApiKeysTab,
+  ChatPanel,
+  getAppStorage,
+  ProxyTab,
+  ProvidersModelsTab,
+  SessionListDialog,
+  SettingsDialog,
+} from "@mariozechner/pi-web-ui";
+import { Pi4WordProxyTab } from "../settings/pi4word-proxy-tab.js";
 import {
-  appendAssistantShell,
-  appendSystemLine,
-  appendUserMessage,
-  applySettingsToForm,
-  fillModelSelect,
-  readSettingsFromForm,
-  renderApp,
-  setStatus,
-  validateSettingsForRun,
-} from "./task-pane.boundary.js";
+  createWordAgent,
+  createWordAgentFromSession,
+  createWordTools,
+  getDefaultWordModel,
+} from "../assistant/pi-assistant.js";
+import { initPiWebStorage, migrateLegacyLocalStorageOnce } from "./pi-web-storage.js";
+import { renderApp, setStatus } from "./task-pane.boundary.js";
 
 /** @type {boolean} */
 let appStarted = false;
 
+/** @type {{ current: string | undefined, title: string }} */
+const sessionRef = { current: undefined, title: "" };
+
+/** @type {(() => void) | undefined} */
+let unsubscribeAgent = () => {};
+
+/**
+ * @param {import("@mariozechner/pi-agent-core").AgentMessage[]} messages
+ */
+function shouldSaveSession(messages) {
+  const hasUser = messages.some((m) => m.role === "user" || m.role === "user-with-attachments");
+  const hasAssistant = messages.some((m) => m.role === "assistant");
+  return hasUser && hasAssistant;
+}
+
+/**
+ * @param {import("@mariozechner/pi-agent-core").AgentMessage[]} messages
+ */
+function generateTitle(messages) {
+  const first = messages.find((m) => m.role === "user" || m.role === "user-with-attachments");
+  if (!first) {
+    return "";
+  }
+  let text = "";
+  if (first.role === "user") {
+    const c = first.content;
+    if (typeof c === "string") {
+      text = c;
+    } else if (Array.isArray(c)) {
+      text = c
+        .filter((x) => x && x.type === "text")
+        .map((x) => x.text || "")
+        .join(" ");
+    }
+  } else {
+    text = String(first.content ?? "");
+  }
+  text = text.trim();
+  if (!text) {
+    return "";
+  }
+  const end = text.search(/[.!?]/);
+  if (end > 0 && end <= 50) {
+    return text.substring(0, end + 1);
+  }
+  return text.length <= 50 ? text : `${text.substring(0, 47)}…`;
+}
+
+/**
+ * @param {import("@mariozechner/pi-agent-core").Agent} agent
+ */
+async function saveCurrentSession(agent) {
+  const storage = getAppStorage();
+  if (!storage.sessions) {
+    return;
+  }
+  const state = agent.state;
+  if (!shouldSaveSession(state.messages)) {
+    return;
+  }
+
+  if (!sessionRef.current) {
+    sessionRef.current = crypto.randomUUID();
+  }
+  if (!sessionRef.title) {
+    sessionRef.title = generateTitle(state.messages);
+  }
+
+  const now = new Date().toISOString();
+  const sessionData = {
+    id: sessionRef.current,
+    title: sessionRef.title,
+    model: state.model,
+    thinkingLevel: state.thinkingLevel,
+    messages: state.messages,
+    createdAt: now,
+    lastModified: now,
+  };
+  const metadata = {
+    id: sessionRef.current,
+    title: sessionRef.title,
+    createdAt: now,
+    lastModified: now,
+    messageCount: state.messages.length,
+    usage: {
+      input: 0,
+      output: 0,
+      cacheRead: 0,
+      cacheWrite: 0,
+      totalTokens: 0,
+      cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+    },
+    modelId: state.model?.id ?? null,
+    thinkingLevel: state.thinkingLevel,
+    preview: generateTitle(state.messages),
+  };
+  await storage.sessions.save(sessionData, metadata);
+}
+
+/**
+ * @param {import("@mariozechner/pi-agent-core").Agent} agent
+ */
+function attachSessionAutosave(agent) {
+  unsubscribeAgent();
+  unsubscribeAgent = agent.subscribe(async (event) => {
+    if (event.type === "agent_end") {
+      try {
+        await saveCurrentSession(agent);
+      } catch (e) {
+        console.warn("[pi4word] session save failed:", e);
+      }
+    }
+  });
+}
+
 /**
  * @param {{ host?: unknown } | null | undefined} info
  */
-function init(info) {
+async function init(info) {
   const mount = document.getElementById("app-root");
   if (!mount) {
     throw new Error("Pi4Word: #app-root is missing from index.html");
   }
   mount.replaceChildren();
+
+  await initPiWebStorage();
+  const migratedModel = await migrateLegacyLocalStorageOnce(getAppStorage());
+
   renderApp();
 
   const inWord = Boolean(
@@ -39,199 +159,108 @@ function init(info) {
   );
   setStatus(
     inWord
-      ? "Connected to Word — configure the model, then chat below."
-      : "Open this add-in in Word for document tools; chat still works for testing.",
+      ? "Connected to Word — use Settings for API keys and model."
+      : "Open in Word for document tools; chat works in the browser for testing.",
     false,
   );
 
-  const main = document.getElementById("mainDiv");
-  const chatLog = document.getElementById("chatLog");
-  const input = /** @type {HTMLTextAreaElement} */ (document.getElementById("chatInput"));
-  const sendBtn = /** @type {HTMLButtonElement} */ (document.getElementById("sendBtn"));
-  const stopBtn = /** @type {HTMLButtonElement} */ (document.getElementById("stopBtn"));
-  const clearBtn = /** @type {HTMLButtonElement} */ (document.getElementById("clearChatBtn"));
-  const saveConnBtn = /** @type {HTMLButtonElement} */ (
-    document.getElementById("saveConnectionBtn")
-  );
-  const fieldProvider = /** @type {HTMLSelectElement} */ (document.getElementById("fieldProvider"));
-  const fieldModelId = /** @type {HTMLSelectElement} */ (document.getElementById("fieldModelId"));
+  const chatMount = document.getElementById("chatMount");
+  const settingsBtn = /** @type {HTMLButtonElement | null} */ (document.getElementById("settingsBtn"));
+  const sessionsBtn = /** @type {HTMLButtonElement | null} */ (document.getElementById("sessionsBtn"));
+  const newSessionBtn = /** @type {HTMLButtonElement | null} */ (document.getElementById("newSessionBtn"));
 
-  if (!main || !chatLog || !input || !sendBtn || !stopBtn || !clearBtn || !fieldProvider || !fieldModelId) {
+  if (!chatMount || !settingsBtn || !sessionsBtn || !newSessionBtn) {
     throw new Error("Pi4Word: expected task pane controls were not found after renderApp()");
   }
 
-  fieldProvider.addEventListener("change", () => {
-    fillModelSelect(fieldModelId, fieldProvider.value, undefined);
-  });
+  const initialModel = migratedModel ?? getDefaultWordModel();
 
-  let stored;
-  try {
-    stored = loadSettings(localStorage);
-  } catch (e) {
-    console.warn("[pi4word] could not read settings from storage:", e);
-    stored = { ...DEFAULT_SETTINGS };
-  }
-  applySettingsToForm(stored);
+  /** @type {import("@mariozechner/pi-agent-core").Agent} */
+  let agent = createWordAgent(initialModel);
 
-  /** @type {import("@mariozechner/pi-agent-core").Agent | null} */
-  let agent = null;
-  let settingsSig = "";
-  let unsubscribe = () => {};
+  const chatPanel = new ChatPanel();
+  chatMount.appendChild(chatPanel);
 
-  /** @returns {import("@mariozechner/pi-agent-core").Agent} */
-  function ensureAgent() {
-    const settings = readSettingsFromForm();
-    const sig = serializeSettings(settings);
-    if (agent && sig === settingsSig) {
-      return agent;
-    }
-    try {
-      agent = createWordAgent(settings);
-      settingsSig = sig;
-      unsubscribe();
-      unsubscribe = attachAgentListeners(agent);
-      return agent;
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setStatus(`Model error: ${msg}`, true);
-      agent = null;
-      settingsSig = "";
-      throw err;
-    }
-  }
-
-  /** @type {HTMLElement | null} */
-  let currentAssistantEl = null;
-
-  function attachAgentListeners(a) {
-    return a.subscribe((event) => {
-      if (event.type === "message_start" && event.message.role === "assistant") {
-        currentAssistantEl = appendAssistantShell(chatLog);
-        currentAssistantEl.textContent = "";
-      }
-      if (event.type === "message_update" && event.assistantMessageEvent?.type === "text_delta") {
-        if (currentAssistantEl) {
-          currentAssistantEl.textContent += event.assistantMessageEvent.delta;
-          chatLog.scrollTop = chatLog.scrollHeight;
-        }
-      }
-      if (event.type === "tool_execution_start") {
-        appendSystemLine(chatLog, `Tool: ${event.toolName}`);
-      }
-      if (event.type === "agent_end") {
-        currentAssistantEl = null;
-      }
+  async function bindChatPanel() {
+    await chatPanel.setAgent(agent, {
+      onApiKeyRequired: (provider) => ApiKeyPromptDialog.prompt(provider),
+      toolsFactory: () => createWordTools(),
     });
   }
 
-  try {
-    ensureAgent();
-  } catch {
-    // Invalid model until user fixes connection
-  }
+  await bindChatPanel();
+  attachSessionAutosave(agent);
 
-  saveConnBtn?.addEventListener("click", () => {
-    const settings = readSettingsFromForm();
-    saveSettings(localStorage, settings);
-    try {
-      settingsSig = "";
-      ensureAgent();
-      setStatus("Connection settings saved.", false);
-    } catch {
-      // status set in ensureAgent
-    }
+  settingsBtn.addEventListener("click", () => {
+    void SettingsDialog.open([
+      new ProvidersModelsTab(),
+      new ProxyTab(),
+      new ApiKeysTab(),
+      new Pi4WordProxyTab(),
+    ]);
   });
 
-  function setRunning(running) {
-    sendBtn.disabled = running;
-    stopBtn.disabled = !running;
-    input.disabled = running;
-  }
-
-  stopBtn.addEventListener("click", () => {
-    agent?.abort();
+  sessionsBtn.addEventListener("click", () => {
+    void SessionListDialog.open(
+      async (sessionId) => {
+        const storage = getAppStorage();
+        const data = await storage.sessions.get(sessionId);
+        if (!data) {
+          setStatus("Session not found.", true);
+          return;
+        }
+        sessionRef.current = sessionId;
+        sessionRef.title = data.title || "";
+        agent = createWordAgentFromSession({
+          model: data.model,
+          thinkingLevel: data.thinkingLevel,
+          messages: data.messages,
+        });
+        await bindChatPanel();
+        attachSessionAutosave(agent);
+        setStatus("Session loaded.", false);
+      },
+      (deletedId) => {
+        if (deletedId === sessionRef.current) {
+          sessionRef.current = undefined;
+          sessionRef.title = "";
+        }
+      },
+    );
   });
 
-  clearBtn.addEventListener("click", () => {
-    agent?.reset();
-    chatLog.replaceChildren();
-    setStatus("Conversation cleared.", false);
-  });
-
-  async function onSend() {
-    const text = input.value.trim();
-    if (!text) {
-      return;
-    }
-    const settings = readSettingsFromForm();
-    const err = validateSettingsForRun(settings);
-    if (err) {
-      setStatus(err, true);
-      return;
-    }
-
-    try {
-      ensureAgent();
-    } catch {
-      return;
-    }
-
-    if (!agent) {
-      return;
-    }
-
-    input.value = "";
-    appendUserMessage(chatLog, text);
-    setRunning(true);
-    setStatus("Thinking…", false);
-
-    try {
-      await agent.prompt(text);
-      const errMsg = agent.state.errorMessage;
-      if (errMsg) {
-        setStatus(errMsg, true);
-      } else {
-        setStatus("Ready.", false);
-      }
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      setStatus(msg, true);
-    } finally {
-      setRunning(false);
-    }
-  }
-
-  sendBtn.addEventListener("click", () => {
-    void onSend();
-  });
-  input.addEventListener("keydown", (ev) => {
-    if (ev.key === "Enter" && !ev.shiftKey) {
-      ev.preventDefault();
-      void onSend();
-    }
+  newSessionBtn.addEventListener("click", async () => {
+    sessionRef.current = undefined;
+    sessionRef.title = "";
+    agent = createWordAgent(getDefaultWordModel());
+    await bindChatPanel();
+    attachSessionAutosave(agent);
+    setStatus("New chat.", false);
   });
 }
 
 /**
- * Ensures the UI mounts even when Office.js is blocked (e.g. tracking prevention) or onReady is late.
+ * Ensures the UI mounts even when Office.js is blocked or onReady is late.
  * @param {{ host?: unknown } | null | undefined} info
  */
 function startApp(info) {
   if (appStarted) {
     return;
   }
-  try {
-    init(info);
-    appStarted = true;
-  } catch (e) {
-    console.error("[pi4word] init failed:", e);
-  }
+  void init(info)
+    .then(() => {
+      appStarted = true;
+    })
+    .catch((e) => {
+      console.error("[pi4word] init failed:", e);
+      setStatus(e instanceof Error ? e.message : String(e), true);
+    });
 }
 
 function scheduleOfficeBoot() {
   const runOfficeReady = () => {
     if (typeof Office !== "undefined" && typeof Office.onReady === "function") {
-      Office.onReady((info) => startApp(info));
+      Office.onReady((officeInfo) => startApp(officeInfo));
     } else {
       startApp(null);
     }

@@ -10,14 +10,18 @@
     "serve": "npx -y http-server . -S -C certs/cert.pem -K certs/cert.pem -p 3000",
     "word": "npx -y office-addin-debugging start manifest.xml desktop --app word --dev-server \"npm run serve\" --dev-server-port 3000",
     "test": "node --test",
-    "esbuild": "npx esbuild ./src/index.js --bundle --minify --sourcemap --platform=browser --format=esm --external:office-js --outfile=./public/index.min.js",
-    "build": "npm run test && npm run esbuild"
+    "copy:css": "node scripts/copy-web-ui-css.mjs",
+    "esbuild": "npx esbuild ./src/index.js --bundle --minify --sourcemap --platform=browser --format=esm --external:office-js --alias:process=./src/shims/process.js --outfile=./public/index.min.js",
+    "build": "npm run test && npm run copy:css && npm run esbuild"
   },
   "devDependencies": {
     "esbuild": "^0.25.11"
   },
   "dependencies": {
+    "@mariozechner/mini-lit": "^0.2.1",
     "@mariozechner/pi-agent-core": "^0.67.2",
-    "@mariozechner/pi-ai": "^0.67.2"
+    "@mariozechner/pi-ai": "^0.67.2",
+    "@mariozechner/pi-web-ui": "^0.67.2",
+    "lit": "^3.3.2"
   }
 }
