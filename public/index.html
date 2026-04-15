@@ -9,7 +9,7 @@
   <body>
     <div id="app-root">
       <p id="boot-placeholder" style="padding: 16px; margin: 0; font: 14px 'Segoe UI', sans-serif; color: #5a5a5a">
-        Loading Pi4Word…
+        Loading…
       </p>
     </div>
     <script>
@@ -33,12 +33,12 @@
 
         window.addEventListener("error", function (ev) {
           var m = ev && ev.error && ev.error.message ? ev.error.message : ev && ev.message ? ev.message : "Script error";
-          showBootError("Pi4Word: " + m);
+          showBootError("Error: " + m);
         });
         window.addEventListener("unhandledrejection", function (ev) {
           var r = ev && ev.reason;
           var m = r && r.message ? r.message : String(r != null ? r : "unknown");
-          showBootError("Pi4Word (promise): " + m);
+          showBootError("Error (promise): " + m);
         });
       })();
     </script>
