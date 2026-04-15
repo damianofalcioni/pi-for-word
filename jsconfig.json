@@ -8,5 +8,5 @@
     "enable": true,
     "include": ["office-js", "node"]
   },
-  "include": ["src/**/*.js", "scripts/**/*.js"]
+  "include": ["src/**/*.js", "scripts/**/*.js", "test/**/*.js"]
 }

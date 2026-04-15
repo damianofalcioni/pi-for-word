@@ -2,17 +2,22 @@
   "name": "pi4word-office-addin",
   "version": "0.1.0",
   "private": true,
-  "description": "Pi Agent as Word add-in",
+  "type": "module",
+  "description": "Pi4Word — Pi Agent assistant as a Word add-in",
   "license": "UNLICENSED",
   "scripts": {
     "cert": "powershell -ExecutionPolicy Bypass -File scripts/setup-cert.ps1",
     "serve": "npx -y http-server . -S -C certs/cert.pem -K certs/cert.pem -p 3000",
     "word": "npx -y office-addin-debugging start manifest.xml desktop --app word --dev-server \"npm run serve\" --dev-server-port 3000",
     "test": "node --test",
-    "esbuild": "npx esbuild ./src/index.js --bundle --minify --sourcemap --platform=browser --format=esm --external:office-js --outfile=./public/index.min.js",
+    "esbuild": "npx esbuild ./src/index.js --bundle --minify --sourcemap --platform=browser --format=iife --outfile=./public/index.min.js",
     "build": "npm run test && npm run esbuild"
   },
   "devDependencies": {
     "esbuild": "^0.25.11"
+  },
+  "dependencies": {
+    "@mariozechner/pi-agent-core": "^0.67.2",
+    "@mariozechner/pi-ai": "^0.67.2"
   }
 }

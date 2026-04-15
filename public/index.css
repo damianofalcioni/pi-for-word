@@ -236,6 +236,82 @@ h3 {
   color: var(--muted);
 }
 
+.connection-details summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.connection-hint {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+  margin: 0 0 12px;
+}
+
+.connection-hint code {
+  font-size: 11px;
+}
+
+.row-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.row-check input {
+  width: auto;
+  margin: 0;
+}
+
+.chat-section h2 {
+  margin-top: 0;
+}
+
+.chat-log {
+  min-height: 180px;
+  max-height: 360px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  background: #fbfaf6;
+  margin-bottom: 10px;
+  display: grid;
+  gap: 10px;
+}
+
+.chat-msg {
+  font-size: 12px;
+  line-height: 1.45;
+  padding: 8px 10px;
+  border-radius: 8px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.chat-msg-user {
+  background: #e4f2f2;
+  border: 1px solid #c5dedf;
+  justify-self: end;
+  max-width: 95%;
+}
+
+.chat-msg-assistant {
+  background: #fff;
+  border: 1px solid var(--border);
+  justify-self: start;
+  max-width: 100%;
+}
+
+.chat-msg-tool {
+  font-size: 11px;
+  color: var(--muted);
+  font-style: italic;
+  justify-self: center;
+}
+
 @media (max-width: 520px) {
   .tabs {
     grid-template-columns: repeat(3, 1fr);

@@ -3,19 +3,46 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>LLM4Proposals</title>
+    <title>Pi4Word</title>
     <link rel="stylesheet" href="./index.css" />
   </head>
   <body>
-    <header class="app-header">
-      <div>
-        <div class="app-title">LLM4Proposals</div>
-        <div class="app-subtitle">Hello World — Word add-in prototype</div>
-      </div>
-      <div class="status" id="hostStatus">Loading Office...</div>
-    </header>
-    <main id="mainDiv" class="hello-main"></main>
+    <div id="app-root">
+      <p id="boot-placeholder" style="padding: 16px; margin: 0; font: 14px 'Segoe UI', sans-serif; color: #5a5a5a">
+        Loading Pi4Word…
+      </p>
+    </div>
+    <script>
+      (function () {
+        if (typeof globalThis.process === "undefined") {
+          globalThis.process = { env: {} };
+        } else if (!globalThis.process.env) {
+          globalThis.process.env = {};
+        }
+
+        function showBootError(msg) {
+          var root = document.getElementById("app-root");
+          if (!root) return;
+          root.replaceChildren();
+          var wrap = document.createElement("div");
+          wrap.style.cssText =
+            "padding:16px;font:12px 'Segoe UI',sans-serif;color:#6a1b16;background:#f7d8d2;border-radius:8px;white-space:pre-wrap;word-break:break-word;";
+          wrap.textContent = String(msg);
+          root.appendChild(wrap);
+        }
+
+        window.addEventListener("error", function (ev) {
+          var m = ev && ev.error && ev.error.message ? ev.error.message : ev && ev.message ? ev.message : "Script error";
+          showBootError("Pi4Word: " + m);
+        });
+        window.addEventListener("unhandledrejection", function (ev) {
+          var r = ev && ev.reason;
+          var m = r && r.message ? r.message : String(r != null ? r : "unknown");
+          showBootError("Pi4Word (promise): " + m);
+        });
+      })();
+    </script>
     <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
-    <script type="module" src="./index.min.js"></script>
+    <script src="./index.min.js"></script>
   </body>
 </html>

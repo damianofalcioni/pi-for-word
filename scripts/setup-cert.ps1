@@ -5,7 +5,7 @@ $null = New-Item -ItemType Directory -Force -Path $certDir
 
 $pfxPath = Join-Path $certDir "localhost.pfx"
 $cerPath = Join-Path $certDir "localhost.cer"
-$certName = "LLM4Proposals Dev Cert"
+$certName = "Pi4Word Dev Cert"
 $dnsName = "localhost"
 $passphrase = "llm4p-dev"
 
