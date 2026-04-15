@@ -33,6 +33,8 @@ Optimize for:
 features/<feature>/
 ```
 
+In **this repo**, feature roots live under **`src/features/<feature>/`** (same rules).
+
 * No cross-feature internal dependencies
 * All logic for a feature is local
 
