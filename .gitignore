@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE / editor
+.idea/
+*.swp
+*.swo
+*~
+
+# Certificates and keys (regenerate with npm run cert)
+certs/*.pem
+certs/*.key
+certs/*.crt
+
+# Test / coverage (if added later)
+coverage/
+.nyc_output/
+
+# Optional: uncomment to require `npm run esbuild` after clone
+# public/index.min.js
+# public/index.min.js.map

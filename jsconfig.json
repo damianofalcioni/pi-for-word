@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["DOM", "DOM.Iterable", "ES2020"],
+    "allowJs": true
+  },
+  "typeAcquisition": {
+    "enable": true,
+    "include": ["office-js", "node"]
+  },
+  "include": ["src/**/*.js", "scripts/**/*.js"]
+}
