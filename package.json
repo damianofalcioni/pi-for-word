@@ -10,7 +10,7 @@
     "serve": "npx -y http-server . -S -C certs/cert.pem -K certs/cert.pem -p 3000",
     "word": "npx -y office-addin-debugging start manifest.xml desktop --app word --dev-server \"npm run serve\" --dev-server-port 3000",
     "test": "node --test",
-    "esbuild": "npx esbuild ./src/index.js --bundle --minify --sourcemap --platform=browser --format=iife --outfile=./public/index.min.js",
+    "esbuild": "npx esbuild ./src/index.js --bundle --minify --sourcemap --platform=browser --format=esm --external:office-js --outfile=./public/index.min.js",
     "build": "npm run test && npm run esbuild"
   },
   "devDependencies": {
