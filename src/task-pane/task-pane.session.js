@@ -68,17 +68,41 @@ export async function saveCurrentSession(agent) {
 }
 
 /**
+ * Composer shows Stop (square) while `session.state.isStreaming`; pi-web-ui can paint once before
+ * `finishRun()` clears it. Session autosave previously `await`ed IndexedDB inside `agent_end`, which
+ * delayed `finishRun()` and made `setTimeout(0)` refresh misleading. Re-sync after the run is idle.
+ *
+ * @param {import("@mariozechner/pi-agent-core").Agent} agent
+ */
+function refreshChatComposerAfterIdle(agent) {
+  void agent.waitForIdle().then(() => {
+    const scope = document.getElementById("chatMount");
+    const iface = scope?.querySelector("agent-interface") ?? document.querySelector("agent-interface");
+    if (!iface || typeof iface.requestUpdate !== "function") {
+      return;
+    }
+    const editor = iface.querySelector("message-editor");
+    if (editor && "isStreaming" in editor) {
+      editor.isStreaming = Boolean(agent.state.isStreaming);
+    }
+    iface.requestUpdate();
+    if (editor && typeof editor.requestUpdate === "function") {
+      editor.requestUpdate();
+    }
+  });
+}
+
+/**
  * @param {import("@mariozechner/pi-agent-core").Agent} agent
  */
 export function attachSessionAutosave(agent) {
   unsubscribeAgent();
-  unsubscribeAgent = agent.subscribe(async (event) => {
+  unsubscribeAgent = agent.subscribe((event) => {
     if (event.type === "agent_end") {
-      try {
-        await saveCurrentSession(agent);
-      } catch (e) {
+      refreshChatComposerAfterIdle(agent);
+      void saveCurrentSession(agent).catch((e) => {
         console.warn("[pi4word] session save failed:", e);
-      }
+      });
     }
   });
 }
