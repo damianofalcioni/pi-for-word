@@ -73,6 +73,18 @@ body {
   flex-direction: column;
 }
 
+/*
+ * pi-web-ui AgentInterface uses bg-background (flat near-black); Pi4Word shell uses a body gradient.
+ * Without this, the chat column reads as a harsh black box around messages + composer.
+ */
+agent-interface > .flex.flex-col.h-full.bg-background {
+  background: transparent !important;
+}
+
+pi-chat-panel {
+  background: transparent;
+}
+
 /* Chat composer: global textarea rules add border/background; inset field from the card edges */
 message-editor textarea {
   border: none !important;
