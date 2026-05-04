@@ -67,6 +67,29 @@ export async function saveCurrentSession(agent) {
   await storage.sessions.save(sessionData, metadata);
 }
 
+function findAgentInterfaceElement() {
+  const scope = document.getElementById("chatMount");
+  return scope?.querySelector("agent-interface") ?? document.querySelector("agent-interface");
+}
+
+/**
+ * @param {Element} iface
+ * @param {import("@mariozechner/pi-agent-core").Agent} agent
+ */
+function syncChatComposerDom(iface, agent) {
+  if (typeof iface.requestUpdate !== "function") {
+    return;
+  }
+  const editor = iface.querySelector("message-editor");
+  if (editor && "isStreaming" in editor) {
+    editor.isStreaming = Boolean(agent.state.isStreaming);
+  }
+  iface.requestUpdate();
+  if (editor && typeof editor.requestUpdate === "function") {
+    editor.requestUpdate();
+  }
+}
+
 /**
  * Composer shows Stop (square) while `session.state.isStreaming`; pi-web-ui can paint once before
  * `finishRun()` clears it. Session autosave previously `await`ed IndexedDB inside `agent_end`, which
@@ -76,19 +99,11 @@ export async function saveCurrentSession(agent) {
  */
 function refreshChatComposerAfterIdle(agent) {
   void agent.waitForIdle().then(() => {
-    const scope = document.getElementById("chatMount");
-    const iface = scope?.querySelector("agent-interface") ?? document.querySelector("agent-interface");
-    if (!iface || typeof iface.requestUpdate !== "function") {
+    const iface = findAgentInterfaceElement();
+    if (!iface) {
       return;
     }
-    const editor = iface.querySelector("message-editor");
-    if (editor && "isStreaming" in editor) {
-      editor.isStreaming = Boolean(agent.state.isStreaming);
-    }
-    iface.requestUpdate();
-    if (editor && typeof editor.requestUpdate === "function") {
-      editor.requestUpdate();
-    }
+    syncChatComposerDom(iface, agent);
   });
 }
 

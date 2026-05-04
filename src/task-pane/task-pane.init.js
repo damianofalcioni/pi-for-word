@@ -1,6 +1,10 @@
 import { getAppStorage } from "@mariozechner/pi-web-ui";
 import { createWordAgent, getDefaultWordModel } from "../assistant/index.js";
-import { initPiWebStorage, migrateLegacyLocalStorageOnce } from "../settings/index.js";
+import {
+  initPiWebStorage,
+  loadPreferredChatModel,
+  migrateLegacyLocalStorageOnce,
+} from "../settings/index.js";
 import { attachSessionAutosave } from "./task-pane.session.js";
 import { computeWordHost, scheduleOfficeBoot } from "./task-pane.office.js";
 import {
@@ -33,7 +37,9 @@ async function bootstrapTaskPane(info) {
   mount.replaceChildren();
 
   await initPiWebStorage();
-  const migratedModel = await migrateLegacyLocalStorageOnce(getAppStorage());
+  const storage = getAppStorage();
+  const migratedModel = await migrateLegacyLocalStorageOnce(storage);
+  const persistedModel = await loadPreferredChatModel();
 
   renderApp();
 
@@ -47,7 +53,7 @@ async function bootstrapTaskPane(info) {
 
   const controls = queryTaskPaneControls();
   const agentHolder = {
-    agent: createWordAgent(migratedModel ?? getDefaultWordModel()),
+    agent: createWordAgent(migratedModel ?? persistedModel ?? getDefaultWordModel()),
   };
 
   return { controls, agentHolder };

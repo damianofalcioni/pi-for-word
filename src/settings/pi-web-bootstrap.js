@@ -8,6 +8,7 @@ import {
   setAppStorage,
 } from "@mariozechner/pi-web-ui";
 import { getModel } from "@mariozechner/pi-ai";
+import { PREFERRED_MODEL_ID_KEY, PREFERRED_PROVIDER_KEY } from "./preferred-chat-model.js";
 import { parseSettings, SETTINGS_KEY } from "./settings-storage.js";
 
 const DB_NAME = "pi4word";
@@ -45,6 +46,8 @@ async function applyLegacySettingsToStorage(storage, legacy) {
   await storage.settings.set("pi4word.streamProxy.enabled", legacy.useProxy);
   await storage.settings.set("pi4word.streamProxy.url", legacy.proxyUrl);
   await storage.settings.set("pi4word.streamProxy.token", legacy.proxyToken);
+  await storage.settings.set(PREFERRED_PROVIDER_KEY, legacy.provider);
+  await storage.settings.set(PREFERRED_MODEL_ID_KEY, legacy.modelId);
 }
 
 /** @param {ReturnType<typeof parseSettings>} legacy */

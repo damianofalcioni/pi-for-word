@@ -15,7 +15,7 @@ import {
   createWordTools,
   getDefaultWordModel,
 } from "../assistant/index.js";
-import { Pi4WordProxyTab } from "../settings/index.js";
+import { loadPreferredChatModel, persistPreferredChatModel, Pi4WordProxyTab } from "../settings/index.js";
 import { attachSessionAutosave, sessionRef } from "./task-pane.session.js";
 import { setStatus } from "./task-pane.boundary.js";
 
@@ -47,6 +47,7 @@ export async function mountChatPanel(chatMount, agentHolder) {
         const agent = agentHolder.agent;
         void ModelSelector.open(agent.state.model, (model) => {
           agent.state.model = model;
+          void persistPreferredChatModel(model);
           const iface = chatPanel.querySelector("agent-interface");
           iface?.requestUpdate();
         });
@@ -112,7 +113,8 @@ export function wireNewSessionButton(controls, agentHolder) {
   controls.newSessionBtn.addEventListener("click", async () => {
     sessionRef.current = undefined;
     sessionRef.title = "";
-    agentHolder.agent = createWordAgent(getDefaultWordModel());
+    const preferred = await loadPreferredChatModel();
+    agentHolder.agent = createWordAgent(preferred ?? getDefaultWordModel());
     await agentHolder.bindChatPanel();
     attachSessionAutosave(agentHolder.agent);
     setStatus("New chat.", false);
