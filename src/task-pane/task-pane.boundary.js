@@ -8,8 +8,7 @@ export function setStatus(message, isError) {
     return;
   }
   status.textContent = message;
-  status.style.background = isError ? "#f7d8d2" : "#edf4f4";
-  status.style.color = isError ? "#6a1b16" : "#134243";
+  status.classList.toggle("is-error", Boolean(isError));
 }
 
 function createAppHeader() {

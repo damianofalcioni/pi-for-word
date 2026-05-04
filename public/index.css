@@ -1,9 +1,12 @@
 :root {
-  --panel: #ffffff;
-  --ink: #1b1b1b;
-  --muted: #5a5a5a;
-  --accent: #1d5b5c;
-  --border: #d9d5c9;
+  --panel: #252830;
+  --surface-muted: #1e232a;
+  --ink: #ececec;
+  --muted: #9aa0a8;
+  --accent: #4a9ea0;
+  --accent-hover: #5cb0b2;
+  --border: #3a4049;
+  --shadow: rgba(0, 0, 0, 0.35);
 }
 
 * {
@@ -19,7 +22,8 @@ body {
   margin: 0;
   font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   color: var(--ink);
-  background: linear-gradient(180deg, #f5f4ef 0%, #ece9e1 100%);
+  background: linear-gradient(180deg, #14171c 0%, #1a1d23 100%);
+  color-scheme: dark;
 }
 
 #app-root {
@@ -57,7 +61,7 @@ body {
   align-items: center;
   padding: 16px;
   border-bottom: 1px solid var(--border);
-  background: #fefcf7;
+  background: #1c2028;
 }
 
 .app-title {
@@ -74,8 +78,13 @@ body {
   font-size: 12px;
   padding: 6px 10px;
   border-radius: 12px;
-  background: #edf4f4;
-  color: #134243;
+  background: rgba(74, 158, 160, 0.18);
+  color: #a8e4e6;
+}
+
+.status.is-error {
+  background: rgba(239, 68, 68, 0.16);
+  color: #fca5a5;
 }
 
 .tabs {
@@ -87,11 +96,16 @@ body {
 
 .tab-button {
   padding: 8px;
-  background: #f0ede4;
+  background: #2a3039;
   border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 12px;
   cursor: pointer;
+  color: var(--ink);
+}
+
+.tab-button:hover {
+  background: #323943;
 }
 
 .tab-button.active {
@@ -118,7 +132,7 @@ body {
   border-radius: 10px;
   padding: 12px;
   margin-bottom: 12px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px var(--shadow);
 }
 
 label {
@@ -137,6 +151,8 @@ textarea {
   border-radius: 6px;
   font-size: 12px;
   margin-top: 4px;
+  background: var(--surface-muted);
+  color: var(--ink);
 }
 
 textarea {
@@ -152,17 +168,27 @@ textarea {
 
 button {
   border: 1px solid var(--border);
-  background: #f0ede4;
+  background: #2a3039;
+  color: var(--ink);
   padding: 8px 10px;
   border-radius: 6px;
   cursor: pointer;
   font-size: 12px;
 }
 
+button:hover:not(:disabled) {
+  background: #323943;
+}
+
 button.primary {
   background: var(--accent);
   color: #fff;
   border-color: var(--accent);
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
 }
 
 button:disabled {
@@ -174,7 +200,7 @@ button:disabled {
   border: 1px dashed var(--border);
   border-radius: 8px;
   padding: 10px;
-  background: #fbfaf6;
+  background: var(--surface-muted);
   font-size: 12px;
   white-space: pre-wrap;
 }
@@ -188,7 +214,7 @@ button:disabled {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 10px;
-  background: #fbfaf6;
+  background: var(--surface-muted);
   display: grid;
   gap: 8px;
 }
@@ -207,7 +233,7 @@ button:disabled {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 8px;
-  background: #fbfaf6;
+  background: var(--surface-muted);
 }
 
 .source-title {
@@ -286,6 +312,9 @@ h3 {
 
 .connection-hint code {
   font-size: 11px;
+  background: var(--surface-muted);
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
 .row-check {
@@ -310,7 +339,7 @@ h3 {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 10px;
-  background: #fbfaf6;
+  background: var(--surface-muted);
   margin-bottom: 10px;
   display: grid;
   gap: 10px;
@@ -326,14 +355,14 @@ h3 {
 }
 
 .chat-msg-user {
-  background: #e4f2f2;
-  border: 1px solid #c5dedf;
+  background: rgba(74, 158, 160, 0.22);
+  border: 1px solid rgba(74, 158, 160, 0.45);
   justify-self: end;
   max-width: 95%;
 }
 
 .chat-msg-assistant {
-  background: #fff;
+  background: var(--panel);
   border: 1px solid var(--border);
   justify-self: start;
   max-width: 100%;
@@ -355,4 +384,15 @@ h3 {
     flex-direction: column;
     align-items: stretch;
   }
+}
+
+/* Pi web UI ships light-oriented message chrome; tune for dark shell */
+.dark .user-message-container {
+  background: linear-gradient(
+    135deg,
+    rgba(217, 79, 0, 0.14),
+    rgba(255, 107, 0, 0.14),
+    rgba(212, 165, 0, 0.12)
+  );
+  border-color: rgba(255, 140, 66, 0.35);
 }

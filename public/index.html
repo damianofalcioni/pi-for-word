@@ -1,15 +1,15 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Pi4Word</title>
-    <link rel="stylesheet" href="./index.css" />
     <link rel="stylesheet" href="./pi-web-ui-app.css" />
+    <link rel="stylesheet" href="./index.css" />
   </head>
   <body>
     <div id="app-root">
-      <p id="boot-placeholder" style="padding: 16px; margin: 0; font: 14px 'Segoe UI', sans-serif; color: #5a5a5a">
+      <p id="boot-placeholder" style="padding: 16px; margin: 0; font: 14px 'Segoe UI', sans-serif; color: #9aa0a8">
         Loading…
       </p>
     </div>
@@ -27,7 +27,7 @@
           root.replaceChildren();
           var wrap = document.createElement("div");
           wrap.style.cssText =
-            "padding:16px;font:12px 'Segoe UI',sans-serif;color:#6a1b16;background:#f7d8d2;border-radius:8px;white-space:pre-wrap;word-break:break-word;";
+            "padding:16px;font:12px 'Segoe UI',sans-serif;color:#fecaca;background:#3f1d1d;border:1px solid #7f1d1d;border-radius:8px;white-space:pre-wrap;word-break:break-word;";
           wrap.textContent = String(msg);
           root.appendChild(wrap);
         }
