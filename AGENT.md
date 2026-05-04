@@ -158,6 +158,17 @@ Tests:
 
 ---
 
+## Verification after implementation (mandatory)
+
+After **every implementation**, before treating work as complete:
+
+1. Run **`npm run eslint`** from the repo root and fix reported problems (including warnings unless the project or user explicitly allows ignoring them).
+2. Run **`npm test`** from the repo root and fix failures.
+
+If either command fails, continue iterating until both succeed. Only skip when the user **explicitly** says to omit ESLint or tests for that task.
+
+---
+
 ## Error Handling
 
 Each layer handles its own errors.
@@ -248,6 +259,7 @@ Do not change:
 * Only changed files
 * No unrelated refactors
 * Tests updated
+* Run **`npm run eslint`** and **`npm test`**; fix failures before finishing
 
 ---
 

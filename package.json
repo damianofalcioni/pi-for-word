@@ -10,12 +10,19 @@
     "serve": "npx -y http-server . -S -C certs/cert.pem -K certs/cert.pem -p 3000",
     "word": "npx -y office-addin-debugging start manifest.xml desktop --app word --dev-server \"npm run serve\" --dev-server-port 3000",
     "test": "node --test",
+    "eslint": "npx eslint .",
     "copy:css": "node scripts/copy-web-ui-css.mjs",
     "esbuild": "npx esbuild ./src/index.js --bundle --minify --sourcemap --platform=browser --format=esm --external:office-js --alias:process=./src/shims/process.js --outfile=./public/index.min.js",
     "build": "npm run test && npm run copy:css && npm run esbuild"
   },
   "devDependencies": {
-    "esbuild": "^0.25.11"
+    "@eslint/js": "^10.0.1",
+    "esbuild": "^0.25.11",
+    "eslint": "^10.3.0",
+    "eslint-import-resolver-node": "^0.3.10",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-sonarjs": "^4.0.3",
+    "globals": "^17.6.0"
   },
   "dependencies": {
     "@mariozechner/mini-lit": "^0.2.1",

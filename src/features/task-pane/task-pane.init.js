@@ -39,34 +39,51 @@ function shouldSaveSession(messages) {
 /**
  * @param {import("@mariozechner/pi-agent-core").AgentMessage[]} messages
  */
-function generateTitle(messages) {
-  const first = messages.find((m) => m.role === "user" || m.role === "user-with-attachments");
+function firstUserLikeMessage(messages) {
+  return messages.find((m) => m.role === "user" || m.role === "user-with-attachments");
+}
+
+/**
+ * @param {import("@mariozechner/pi-agent-core").AgentMessage | undefined} first
+ */
+function textFromUserLikeMessage(first) {
   if (!first) {
     return "";
   }
-  let text = "";
   if (first.role === "user") {
     const c = first.content;
     if (typeof c === "string") {
-      text = c;
-    } else if (Array.isArray(c)) {
-      text = c
+      return c;
+    }
+    if (Array.isArray(c)) {
+      return c
         .filter((x) => x && x.type === "text")
         .map((x) => x.text || "")
         .join(" ");
     }
-  } else {
-    text = String(first.content ?? "");
-  }
-  text = text.trim();
-  if (!text) {
     return "";
   }
-  const end = text.search(/[.!?]/);
-  if (end > 0 && end <= 50) {
-    return text.substring(0, end + 1);
+  return String(first.content ?? "");
+}
+
+/** @param {string} text */
+function shortenChatTitle(text) {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return "";
   }
-  return text.length <= 50 ? text : `${text.substring(0, 47)}…`;
+  const end = trimmed.search(/[.!?]/);
+  if (end > 0 && end <= 50) {
+    return trimmed.substring(0, end + 1);
+  }
+  return trimmed.length <= 50 ? trimmed : `${trimmed.substring(0, 47)}…`;
+}
+
+/**
+ * @param {import("@mariozechner/pi-agent-core").AgentMessage[]} messages
+ */
+function generateTitle(messages) {
+  return shortenChatTitle(textFromUserLikeMessage(firstUserLikeMessage(messages)));
 }
 
 /**
@@ -136,10 +153,39 @@ function attachSessionAutosave(agent) {
   });
 }
 
+/** @param {{ host?: unknown } | null | undefined} info */
+function computeWordHost(info) {
+  return Boolean(
+    info &&
+      typeof Office !== "undefined" &&
+      typeof Office.HostType !== "undefined" &&
+      info.host === Office.HostType.Word,
+  );
+}
+
+function queryTaskPaneControls() {
+  const chatMount = document.getElementById("chatMount");
+  const settingsBtn = /** @type {HTMLButtonElement | null} */ (document.getElementById("settingsBtn"));
+  const sessionsBtn = /** @type {HTMLButtonElement | null} */ (document.getElementById("sessionsBtn"));
+  const newSessionBtn = /** @type {HTMLButtonElement | null} */ (document.getElementById("newSessionBtn"));
+
+  if (!chatMount || !settingsBtn || !sessionsBtn || !newSessionBtn) {
+    throw new Error("Pi4Word: expected task pane controls were not found after renderApp()");
+  }
+  return { chatMount, settingsBtn, sessionsBtn, newSessionBtn };
+}
+
 /**
  * @param {{ host?: unknown } | null | undefined} info
+ * @returns {Promise<{
+ *   controls: ReturnType<typeof queryTaskPaneControls>,
+ *   agentHolder: {
+ *     agent: import("@mariozechner/pi-agent-core").Agent,
+ *     bindChatPanel?: () => Promise<void>,
+ *   },
+ * }>}
  */
-async function init(info) {
+async function bootstrapTaskPane(info) {
   const mount = document.getElementById("app-root");
   if (!mount) {
     throw new Error("Pi4Word: #app-root is missing from index.html");
@@ -151,12 +197,7 @@ async function init(info) {
 
   renderApp();
 
-  const inWord = Boolean(
-    info &&
-      typeof Office !== "undefined" &&
-      typeof Office.HostType !== "undefined" &&
-      info.host === Office.HostType.Word,
-  );
+  const inWord = computeWordHost(info);
   setStatus(
     inWord
       ? "Connected to Word — use Settings for API keys and model."
@@ -164,33 +205,33 @@ async function init(info) {
     false,
   );
 
-  const chatMount = document.getElementById("chatMount");
-  const settingsBtn = /** @type {HTMLButtonElement | null} */ (document.getElementById("settingsBtn"));
-  const sessionsBtn = /** @type {HTMLButtonElement | null} */ (document.getElementById("sessionsBtn"));
-  const newSessionBtn = /** @type {HTMLButtonElement | null} */ (document.getElementById("newSessionBtn"));
+  const controls = queryTaskPaneControls();
+  const agentHolder = {
+    agent: createWordAgent(migratedModel ?? getDefaultWordModel()),
+  };
 
-  if (!chatMount || !settingsBtn || !sessionsBtn || !newSessionBtn) {
-    throw new Error("Pi4Word: expected task pane controls were not found after renderApp()");
-  }
+  return { controls, agentHolder };
+}
 
-  const initialModel = migratedModel ?? getDefaultWordModel();
-
-  /** @type {import("@mariozechner/pi-agent-core").Agent} */
-  let agent = createWordAgent(initialModel);
-
+/**
+ * @param {HTMLElement} chatMount
+ * @param {{ agent: import("@mariozechner/pi-agent-core").Agent, bindChatPanel?: () => Promise<void> }} agentHolder
+ */
+async function mountChatPanel(chatMount, agentHolder) {
   const chatPanel = new ChatPanel();
   chatMount.appendChild(chatPanel);
-
-  async function bindChatPanel() {
-    await chatPanel.setAgent(agent, {
+  const bindChatPanel = async () => {
+    await chatPanel.setAgent(agentHolder.agent, {
       onApiKeyRequired: (provider) => ApiKeyPromptDialog.prompt(provider),
       toolsFactory: () => createWordTools(),
     });
-  }
-
+  };
+  agentHolder.bindChatPanel = bindChatPanel;
   await bindChatPanel();
-  attachSessionAutosave(agent);
+}
 
+/** @param {HTMLButtonElement} settingsBtn */
+function wireSettingsButton(settingsBtn) {
   settingsBtn.addEventListener("click", () => {
     void SettingsDialog.open([
       new ProvidersModelsTab(),
@@ -199,8 +240,14 @@ async function init(info) {
       new Pi4WordProxyTab(),
     ]);
   });
+}
 
-  sessionsBtn.addEventListener("click", () => {
+/**
+ * @param {ReturnType<typeof queryTaskPaneControls>} controls
+ * @param {{ agent: import("@mariozechner/pi-agent-core").Agent, bindChatPanel?: () => Promise<void> }} agentHolder
+ */
+function wireSessionsButton(controls, agentHolder) {
+  controls.sessionsBtn.addEventListener("click", () => {
     void SessionListDialog.open(
       async (sessionId) => {
         const storage = getAppStorage();
@@ -211,13 +258,13 @@ async function init(info) {
         }
         sessionRef.current = sessionId;
         sessionRef.title = data.title || "";
-        agent = createWordAgentFromSession({
+        agentHolder.agent = createWordAgentFromSession({
           model: data.model,
           thinkingLevel: data.thinkingLevel,
           messages: data.messages,
         });
-        await bindChatPanel();
-        attachSessionAutosave(agent);
+        await agentHolder.bindChatPanel();
+        attachSessionAutosave(agentHolder.agent);
         setStatus("Session loaded.", false);
       },
       (deletedId) => {
@@ -228,15 +275,33 @@ async function init(info) {
       },
     );
   });
+}
 
-  newSessionBtn.addEventListener("click", async () => {
+/**
+ * @param {ReturnType<typeof queryTaskPaneControls>} controls
+ * @param {{ agent: import("@mariozechner/pi-agent-core").Agent, bindChatPanel?: () => Promise<void> }} agentHolder
+ */
+function wireNewSessionButton(controls, agentHolder) {
+  controls.newSessionBtn.addEventListener("click", async () => {
     sessionRef.current = undefined;
     sessionRef.title = "";
-    agent = createWordAgent(getDefaultWordModel());
-    await bindChatPanel();
-    attachSessionAutosave(agent);
+    agentHolder.agent = createWordAgent(getDefaultWordModel());
+    await agentHolder.bindChatPanel();
+    attachSessionAutosave(agentHolder.agent);
     setStatus("New chat.", false);
   });
+}
+
+/**
+ * @param {{ host?: unknown } | null | undefined} info
+ */
+async function init(info) {
+  const { controls, agentHolder } = await bootstrapTaskPane(info);
+  await mountChatPanel(controls.chatMount, agentHolder);
+  attachSessionAutosave(agentHolder.agent);
+  wireSettingsButton(controls.settingsBtn);
+  wireSessionsButton(controls, agentHolder);
+  wireNewSessionButton(controls, agentHolder);
 }
 
 /**

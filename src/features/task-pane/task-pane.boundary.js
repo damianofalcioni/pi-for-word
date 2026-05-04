@@ -12,11 +12,7 @@ export function setStatus(message, isError) {
   status.style.color = isError ? "#6a1b16" : "#134243";
 }
 
-/**
- * Builds the task-pane shell: header, toolbar, and mount point for pi-web-ui ChatPanel.
- * Stylesheets: `index.css`, `pi-web-ui-app.css` (linked from index.html).
- */
-export function renderApp() {
+function createAppHeader() {
   const header = document.createElement("header");
   header.className = "app-header";
   const headerLeft = document.createElement("div");
@@ -34,7 +30,10 @@ export function renderApp() {
   hostStatus.textContent = "Loading…";
 
   header.append(headerLeft, hostStatus);
+  return header;
+}
 
+function createAppToolbar() {
   const toolbar = document.createElement("div");
   toolbar.className = "app-toolbar";
   const settingsBtn = document.createElement("button");
@@ -51,7 +50,10 @@ export function renderApp() {
   newSessionBtn.id = "newSessionBtn";
   newSessionBtn.textContent = "New chat";
   toolbar.append(settingsBtn, sessionsBtn, newSessionBtn);
+  return toolbar;
+}
 
+function createAppMain() {
   const main = document.createElement("main");
   main.id = "mainDiv";
   main.className = "app-main";
@@ -61,11 +63,18 @@ export function renderApp() {
   chatMount.className = "chat-mount";
   chatMount.setAttribute("aria-label", "Chat");
 
-  main.append(toolbar, chatMount);
+  main.append(createAppToolbar(), chatMount);
+  return main;
+}
 
+/**
+ * Builds the task-pane shell: header, toolbar, and mount point for pi-web-ui ChatPanel.
+ * Stylesheets: `index.css`, `pi-web-ui-app.css` (linked from index.html).
+ */
+export function renderApp() {
   const mount = document.getElementById("app-root");
   if (!mount) {
     throw new Error("Pi4Word: #app-root is missing from index.html");
   }
-  mount.append(header, main);
+  mount.append(createAppHeader(), createAppMain());
 }
