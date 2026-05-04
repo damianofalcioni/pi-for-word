@@ -6,8 +6,8 @@
 
 ## Current status
 
-- **Implemented:** Code is organized under **`src/features/<name>/`** per **`AGENT.md`**: **`src/features/settings/`** (legacy `localStorage` shape + migration helpers), **`src/features/assistant/`** (Pi Agent + Word tools), **`src/features/task-pane/`** (Office bootstrap and **`@mariozechner/pi-web-ui`** `ChatPanel`). The bundle entry **`src/index.js`** imports **`initializeTaskPane()`** from **`src/features/task-pane/task-pane.init.js`**, which awaits **IndexedDB** `AppStorage` (`setAppStorage`), runs optional **one-time migration** from legacy `localStorage` into provider keys / Pi4Word stream-proxy settings, mounts **`pi-chat-panel`**, and opens **Settings** / **Sessions** via pi-web-ui dialogs. Model, API keys, CORS proxy, and Pi **`streamProxy`** (URL + Bearer token) are configured in **Settings** (including a **Pi4Word proxy** tab for `streamProxy`). Styles: `public/index.css` plus copied **`pi-web-ui-app.css`** (see `npm run copy:css`). Word tools `word_get_selection` and `word_insert_text`; esbuild bundles `src/index.js` to `public/index.min.js` with a **`process` shim** for browser. Colocated tests (`*.test.js`).
-- **Bootstrapping:** **`initializeTaskPane()`** uses internal `scheduleOfficeBoot()` (DOM ready, **`Office.onReady`**, **2.5s fallback**). **`initPiWebStorage()`** initializes IndexedDB before UI. Chat uses **`defaultConvertToLlm`** and a composite **`streamFn`** (`streamProxy` when Pi4Word proxy is enabled, otherwise pi-web-ui CORS **`createStreamFn`**).
+- **Implemented:** Code is organized per **`AGENT.md`** as packages directly under **`src/`**: **`src/settings/`** (legacy `localStorage` shape + migration helpers), **`src/assistant/`** (Pi Agent + Word tools), **`src/task-pane/`** (Office bootstrap and **`@mariozechner/pi-web-ui`** `ChatPanel`). The bundle entry **`src/index.js`** imports **`initializeTaskPane()`** from **`src/task-pane/task-pane.init.js`**, which awaits **IndexedDB** `AppStorage` (`setAppStorage`), runs optional **one-time migration** from legacy `localStorage` into provider keys / Pi4Word stream-proxy settings, mounts **`pi-chat-panel`**, and opens **Settings** / **Sessions** via pi-web-ui dialogs. Model, API keys, CORS proxy, and Pi **`streamProxy`** (URL + Bearer token) are configured in **Settings** (including a **Pi4Word proxy** tab for `streamProxy`). Styles: `public/index.css` plus copied **`pi-web-ui-app.css`** (see `npm run copy:css`). Word tools `word_get_selection` and `word_insert_text`; esbuild bundles `src/index.js` to `public/index.min.js` with a **`process` shim** for browser. Colocated tests (`*.test.js`).
+- **Bootstrapping:** **`initializeTaskPane()`** uses **`task-pane.office.js`** (`scheduleOfficeBoot`: DOM ready, **`Office.onReady`**, **2.5s fallback**). IndexedDB comes from **`src/settings/pi-web-bootstrap.js`** (`initPiWebStorage`, migration). Chat uses **`defaultConvertToLlm`** and a composite **`streamFn`** (`streamProxy` when Pi4Word proxy is enabled, otherwise pi-web-ui CORS **`createStreamFn`**). Feature barrels: **`src/assistant/index.js`**, **`src/settings/index.js`** for composition-root imports.
 - **Not implemented:** Backend proxy server (client configures `streamProxy` URL + token only); production key handling beyond IndexedDB (use a secure proxy for real deployments).
 
 ## Key files
@@ -15,14 +15,20 @@
 | Area | Path |
 |------|------|
 | Entry (esbuild bundle only; calls task pane init) | `src/index.js` |
-| Task pane bootstrap (Office + agent + chat wiring) | `src/features/task-pane/task-pane.init.js` |
-| Task pane shell (header, toolbar, chat mount) | `src/features/task-pane/task-pane.boundary.js` |
-| Pi-web-ui storage bootstrap + migration | `src/features/task-pane/pi-web-storage.js` |
-| Pi4Word streamProxy tab (Settings) | `src/features/settings/pi4word-proxy-tab.js` |
-| Agent + prompts | `src/features/assistant/pi-assistant.js` |
-| Word tools | `src/features/assistant/word-tools.js` |
-| Settings persistence | `src/features/settings/settings-storage.js` |
-| Feature docs (per `AGENT.md`) | `src/features/*/README.md` |
+| Task pane bootstrap (Office + agent + chat wiring) | `src/task-pane/task-pane.init.js` |
+| Task pane shell (header, toolbar, chat mount) | `src/task-pane/task-pane.boundary.js` |
+| Session title preview (pure) | `src/task-pane/task-pane.chat-title.model.js` |
+| Session autosave (titles, persist) | `src/task-pane/task-pane.session.js` |
+| Office host / onReady fallback | `src/task-pane/task-pane.office.js` |
+| Chat + settings/sessions button wiring | `src/task-pane/task-pane.wiring.js` |
+| Pi-web-ui storage bootstrap + migration | `src/settings/pi-web-bootstrap.js` |
+| Settings / storage public exports (barrel) | `src/settings/index.js` |
+| Assistant public exports (barrel) | `src/assistant/index.js` |
+| Pi4Word streamProxy tab (Settings) | `src/settings/pi4word-proxy-tab.js` |
+| Agent + prompts | `src/assistant/pi-assistant.js` |
+| Word tools | `src/assistant/word-tools.js` |
+| Settings persistence | `src/settings/settings-storage.js` |
+| Feature docs (per `AGENT.md`) | `src/assistant/README.md`, `src/settings/README.md`, `src/task-pane/README.md` |
 | Task pane shell (mount point only) | `public/index.html` |
 | Styles | `public/index.css`, `public/pi-web-ui-app.css` (copied from `@mariozechner/pi-web-ui`) |
 | Manifest | `manifest.xml` |
@@ -36,11 +42,13 @@
 
 ## Changelog
 
+- **2026-05-04:** Removed **`src/features/`**; feature folders **`assistant`**, **`settings`**, and **`task-pane`** live directly under **`src/`**. Updated **`AGENT.md`**, **`specifications.md`**, **`src/index.js`** import, and **`task-pane/README.md`** paths.
+- **2026-05-04:** **`AGENT.md`** quickstart, composition-root rule, aligned file limits; moved **`pi-web-storage.js`** → **`settings/pi-web-bootstrap.js`**; added **`assistant/index.js`** and **`settings/index.js`**; split **`task-pane.init.js`** into **`task-pane.session.js`**, **`task-pane.office.js`**, **`task-pane.wiring.js`**; **`task-pane.chat-title.model.js`** + **`task-pane.chat-title.model.test.js`** for session title preview (pure logic, Node-testable).
 - **2026-04-15:** Moved feature roots to **`src/features/`** (was repo-root `features/`); updated `npm test` paths and entry imports.
 - **2026-04-15:** Adopted **`features/`** layout: **`settings`**, **`assistant`**, **`task-pane`** with colocated `*.test.js` and feature **`README.md`**; `npm test` runs **`node --test`** with explicit paths in `package.json`.
 - **2026-04-15:** Split task-pane UI into boundary module; **`src/index.js`** entry/orchestration; tests for `validateLegacySettingsForRun`.
-- **2026-04-15:** Moved orchestration from **`src/index.js`** to **`src/features/task-pane/task-pane.init.js`** (`initializeTaskPane`); bundle entry only calls that feature.
-- **2026-04-15:** Spec updated: minimal `index.html` with **`#app-root`**; UI in **`src/features/task-pane/`**; Office bootstrap with **`Office.onReady`** + fallback timeout; no catalog JSON or generate step.
+- **2026-04-15:** Moved orchestration from **`src/index.js`** to **`src/task-pane/task-pane.init.js`** (`initializeTaskPane`); bundle entry only calls that feature.
+- **2026-04-15:** Spec updated: minimal `index.html` with **`#app-root`**; UI in **`src/task-pane/`**; Office bootstrap with **`Office.onReady`** + fallback timeout; no catalog JSON or generate step.
 
 - **2026-04-15:** Add-in display name and manifest strings updated to **Pi4Word** (ribbon, Get Started, descriptions).
 - **2026-04-15:** Integrated `@mariozechner/pi-agent-core` with chat UI, Word tools, and settings storage.
