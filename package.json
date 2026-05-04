@@ -11,7 +11,7 @@
     "word": "npx -y office-addin-debugging start manifest.xml desktop --app word --dev-server \"npm run serve\" --dev-server-port 3000",
     "test": "node --test",
     "eslint": "npx eslint .",
-    "esbuild": "npx esbuild ./src/index.js --bundle --minify --sourcemap --platform=browser --format=esm --external:office-js --alias:process=./src/shims/process.js --inject:./src/process-polyfill.js --outfile=./public/index.min.js --loader:.ttf=file --loader:.woff=file --loader:.woff2=file --asset-names=assets/[name]-[hash]",
+    "esbuild": "npx esbuild ./src/index.js --bundle --minify --sourcemap --platform=browser --format=esm --external:office-js --alias:process=./src/shims/process.js --inject:./src/shims/process.js --outfile=./public/index.min.js --loader:.ttf=file --loader:.woff=file --loader:.woff2=file --asset-names=assets/[name]-[hash]",
     "build": "npm run test && npm run eslint && npm run esbuild"
   },
   "devDependencies": {
