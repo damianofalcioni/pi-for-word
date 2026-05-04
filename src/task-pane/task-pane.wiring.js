@@ -3,6 +3,7 @@ import {
   ApiKeysTab,
   ChatPanel,
   getAppStorage,
+  ModelSelector,
   ProxyTab,
   ProvidersModelsTab,
   SessionListDialog,
@@ -41,6 +42,15 @@ export async function mountChatPanel(chatMount, agentHolder) {
     await chatPanel.setAgent(agentHolder.agent, {
       onApiKeyRequired: (provider) => ApiKeyPromptDialog.prompt(provider),
       toolsFactory: () => createWordTools(),
+      // ModelSelector updates agent.state.model without re-rendering AgentInterface (pi-web-ui).
+      onModelSelect: () => {
+        const agent = agentHolder.agent;
+        void ModelSelector.open(agent.state.model, (model) => {
+          agent.state.model = model;
+          const iface = chatPanel.querySelector("agent-interface");
+          iface?.requestUpdate();
+        });
+      },
     });
   };
   agentHolder.bindChatPanel = bindChatPanel;

@@ -13,7 +13,7 @@
     "eslint": "npx eslint .",
     "copy:css": "node scripts/copy-web-ui-css.mjs",
     "esbuild": "npx esbuild ./src/index.js --bundle --minify --sourcemap --platform=browser --format=esm --external:office-js --alias:process=./src/shims/process.js --outfile=./public/index.min.js",
-    "build": "npm run test && npm run copy:css && npm run esbuild"
+    "build": "npm run test && npm run eslint && npm run copy:css && npm run esbuild"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
