@@ -68,7 +68,7 @@ function createAppMain() {
 
 /**
  * Builds the task-pane shell: header, toolbar, and mount point for pi-web-ui ChatPanel.
- * Stylesheets: `index.css`, `pi-web-ui-app.css` (linked from index.html).
+ * Styles: `src/index.css` + `@mariozechner/pi-web-ui/app.css` (imported from `src/index.js`, esbuild → `public/index.min.css`).
  */
 export function renderApp() {
   const mount = document.getElementById("app-root");

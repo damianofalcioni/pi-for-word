@@ -4,45 +4,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Pi4Word</title>
-    <link rel="stylesheet" href="./pi-web-ui-app.css" />
-    <link rel="stylesheet" href="./index.css" />
+    <link rel="stylesheet" href="./index.min.css" />
   </head>
   <body>
     <div id="app-root">
-      <p id="boot-placeholder" style="padding: 16px; margin: 0; font: 14px 'Segoe UI', sans-serif; color: #9aa0a8">
-        Loading…
-      </p>
+      <p id="boot-placeholder" class="boot-placeholder">Loading…</p>
     </div>
-    <script>
-      (function () {
-        if (typeof globalThis.process === "undefined") {
-          globalThis.process = { env: {} };
-        } else if (!globalThis.process.env) {
-          globalThis.process.env = {};
-        }
-
-        function showBootError(msg) {
-          var root = document.getElementById("app-root");
-          if (!root) return;
-          root.replaceChildren();
-          var wrap = document.createElement("div");
-          wrap.style.cssText =
-            "padding:16px;font:12px 'Segoe UI',sans-serif;color:#fecaca;background:#3f1d1d;border:1px solid #7f1d1d;border-radius:8px;white-space:pre-wrap;word-break:break-word;";
-          wrap.textContent = String(msg);
-          root.appendChild(wrap);
-        }
-
-        window.addEventListener("error", function (ev) {
-          var m = ev && ev.error && ev.error.message ? ev.error.message : ev && ev.message ? ev.message : "Script error";
-          showBootError("Error: " + m);
-        });
-        window.addEventListener("unhandledrejection", function (ev) {
-          var r = ev && ev.reason;
-          var m = r && r.message ? r.message : String(r != null ? r : "unknown");
-          showBootError("Error (promise): " + m);
-        });
-      })();
-    </script>
     <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
     <script type="module" src="./index.min.js"></script>
   </body>
