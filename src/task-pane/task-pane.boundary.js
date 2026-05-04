@@ -38,7 +38,6 @@ function createAppToolbar() {
   const settingsBtn = document.createElement("button");
   settingsBtn.type = "button";
   settingsBtn.id = "settingsBtn";
-  settingsBtn.className = "primary";
   settingsBtn.textContent = "Settings";
   const sessionsBtn = document.createElement("button");
   sessionsBtn.type = "button";

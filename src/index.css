@@ -54,7 +54,7 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 0 16px 12px;
+  padding: 12px 16px 12px;
   align-items: center;
 }
 
@@ -71,6 +71,15 @@ body {
   min-height: 0;
   display: flex;
   flex-direction: column;
+}
+
+/* Chat composer: global textarea rules add border/background; inset field from the card edges */
+message-editor textarea {
+  border: none !important;
+  background: transparent !important;
+  margin-inline: 12px !important;
+  width: calc(100% - 24px) !important;
+  box-sizing: border-box;
 }
 
 .app-header {
@@ -198,20 +207,112 @@ button:hover:not(:disabled) {
   background: #323943;
 }
 
-button.primary {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
-}
-
-button.primary:hover:not(:disabled) {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
-}
-
 button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/*
+ * mini-lit Select dropdown (thinking level, etc.): hover/focus uses text-accent-foreground,
+ * which is yellow-tinted in pi-web-ui dark theme — hard to read on bg-accent.
+ */
+.select-portal-container [role="option"]:not([data-disabled="true"]):hover,
+.select-portal-container [role="option"]:not([data-disabled="true"]).bg-accent {
+  background-color: color-mix(in oklab, var(--foreground) 12%, var(--popover)) !important;
+  color: var(--foreground) !important;
+}
+
+/*
+ * Model selector dialog (agent-model-selector): rows use bg-accent / hover:bg-muted for focus & hover;
+ * keep copy readable — same contrast approach as Select portals.
+ */
+agent-model-selector [data-model-item].bg-accent,
+agent-model-selector [data-model-item]:hover {
+  background-color: color-mix(in oklab, var(--foreground) 12%, var(--popover)) !important;
+}
+
+agent-model-selector [data-model-item].bg-accent .text-foreground,
+agent-model-selector [data-model-item]:hover .text-foreground {
+  color: var(--foreground) !important;
+}
+
+agent-model-selector [data-model-item].bg-accent .text-muted-foreground,
+agent-model-selector [data-model-item]:hover .text-muted-foreground {
+  color: color-mix(in oklab, var(--foreground) 68%, transparent) !important;
+}
+
+/* Catches accent-foreground (yellow in dark theme) on inner nodes while row is highlighted */
+agent-model-selector [data-model-item].bg-accent .text-accent-foreground,
+agent-model-selector [data-model-item]:hover .text-accent-foreground {
+  color: var(--foreground) !important;
+}
+
+/* Thinking / Vision filters: strong “on” (accent) vs subdued “off” — default/secondary alone is easy to miss in dark mode */
+agent-model-selector .flex.flex-col.gap-4.border-b.border-border > .flex.gap-2 > button.rounded-full.bg-primary {
+  background: var(--accent) !important;
+  color: #fff !important;
+  border: 1px solid var(--accent) !important;
+}
+
+agent-model-selector .flex.flex-col.gap-4.border-b.border-border > .flex.gap-2 > button.rounded-full.bg-primary:hover:not(:disabled) {
+  background: var(--accent-hover) !important;
+  border-color: var(--accent-hover) !important;
+}
+
+agent-model-selector .flex.flex-col.gap-4.border-b.border-border > .flex.gap-2 > button.rounded-full.bg-secondary {
+  background: color-mix(in oklab, var(--foreground) 6%, var(--popover)) !important;
+  color: var(--foreground) !important;
+  border: 1px solid var(--border) !important;
+}
+
+agent-model-selector .flex.flex-col.gap-4.border-b.border-border > .flex.gap-2 > button.rounded-full.bg-secondary:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--foreground) 11%, var(--popover)) !important;
+}
+
+/* pi-web-ui dialogs (light DOM on body): extra rhythm — sidebar uses tight space-y-1; some footers need clearer separation */
+settings-dialog div.w-64.space-y-1 > :not(:last-child) {
+  margin-bottom: 0.5rem !important;
+}
+
+settings-dialog div[class*="md:hidden"][class*="flex-shrink-0"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/*
+ * Active settings section = Pi4Word primary (accent). Default activeTabIndex is 0, matching
+ * Providers & Models first in task-pane.wiring.js; switching tabs moves bg-secondary / border-b-2 in the DOM.
+ */
+settings-dialog div.w-64.space-y-1 > button.bg-secondary {
+  background: var(--accent) !important;
+  color: #fff !important;
+  border: 1px solid var(--accent) !important;
+}
+
+settings-dialog div.w-64.space-y-1 > button.bg-secondary:hover:not(:disabled) {
+  background: var(--accent-hover) !important;
+  border-color: var(--accent-hover) !important;
+}
+
+settings-dialog div[class*="md:hidden"][class*="flex-shrink-0"] > button.border-b-2 {
+  background: var(--accent) !important;
+  color: #fff !important;
+  border: 1px solid var(--accent) !important;
+  border-radius: 6px;
+}
+
+settings-dialog div[class*="md:hidden"][class*="flex-shrink-0"] > button.border-b-2:hover:not(:disabled) {
+  background: var(--accent-hover) !important;
+  border-color: var(--accent-hover) !important;
+}
+
+.fixed.inset-0 .flex.justify-end {
+  gap: 0.625rem;
+}
+
+.fixed.inset-0 .flex.gap-2:not(.flex-col):not(.flex-col-reverse) {
+  gap: 0.625rem;
 }
 
 .preview {
