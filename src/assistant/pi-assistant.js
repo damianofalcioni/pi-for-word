@@ -1,6 +1,7 @@
 import { Agent, streamProxy } from "@mariozechner/pi-agent-core";
 import { getModel } from "@mariozechner/pi-ai";
 import { createStreamFn, defaultConvertToLlm, getAppStorage } from "@mariozechner/pi-web-ui";
+import { attachPreferredThinkingLevelPersistence, isThinkingLevel } from "../settings/preferred-thinking-level.js";
 import { createWordTools } from "./word-tools.js";
 
 export const SYSTEM_PROMPT = `You are an AI assistant embedded in Microsoft Word. You help the user draft and edit documents.
@@ -35,15 +36,16 @@ export function createPi4WordStreamFn() {
 
 /**
  * @param {import("@mariozechner/pi-ai").Model} model
+ * @param {{ thinkingLevel?: import("@mariozechner/pi-agent-core").ThinkingLevel }} [opts]
  * @returns {import("@mariozechner/pi-agent-core").Agent}
  */
-export function createWordAgent(model) {
+export function createWordAgent(model, opts = {}) {
   const streamFn = createPi4WordStreamFn();
-  return new Agent({
+  const agent = new Agent({
     initialState: {
       systemPrompt: SYSTEM_PROMPT,
       model,
-      thinkingLevel: "off",
+      thinkingLevel: isThinkingLevel(opts.thinkingLevel) ? opts.thinkingLevel : "off",
       messages: [],
       tools: [],
     },
@@ -54,6 +56,8 @@ export function createWordAgent(model) {
       return key ?? undefined;
     },
   });
+  attachPreferredThinkingLevelPersistence(agent);
+  return agent;
 }
 
 /**
@@ -70,11 +74,11 @@ export function getDefaultWordModel() {
  */
 export function createWordAgentFromSession(partial) {
   const streamFn = createPi4WordStreamFn();
-  return new Agent({
+  const agent = new Agent({
     initialState: {
       systemPrompt: SYSTEM_PROMPT,
       model: partial.model,
-      thinkingLevel: partial.thinkingLevel ?? "off",
+      thinkingLevel: isThinkingLevel(partial.thinkingLevel) ? partial.thinkingLevel : "off",
       messages: partial.messages ?? [],
       tools: [],
     },
@@ -85,6 +89,8 @@ export function createWordAgentFromSession(partial) {
       return key ?? undefined;
     },
   });
+  attachPreferredThinkingLevelPersistence(agent);
+  return agent;
 }
 
 export { createWordTools };

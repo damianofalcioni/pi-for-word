@@ -15,4 +15,13 @@ export {
   PREFERRED_MODEL_ID_KEY,
   PREFERRED_PROVIDER_KEY,
 } from "./preferred-chat-model.js";
+export {
+  attachPreferredThinkingLevelPersistence,
+  attachPreferredThinkingLevelUnloadSync,
+  loadPreferredThinkingLevel,
+  peekPreferredThinkingLevelLocal,
+  persistPreferredThinkingLevel,
+  PREFERRED_THINKING_LEVEL_KEY,
+  stashPreferredThinkingLevelLocal,
+} from "./preferred-thinking-level.js";
 export { initPiWebStorage, migrateLegacyLocalStorageOnce } from "./pi-web-bootstrap.js";

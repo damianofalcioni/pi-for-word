@@ -1,8 +1,10 @@
 import { getAppStorage } from "@mariozechner/pi-web-ui";
 import { createWordAgent, getDefaultWordModel } from "../assistant/index.js";
 import {
+  attachPreferredThinkingLevelUnloadSync,
   initPiWebStorage,
   loadPreferredChatModel,
+  loadPreferredThinkingLevel,
   migrateLegacyLocalStorageOnce,
 } from "../settings/index.js";
 import { attachSessionAutosave } from "./task-pane.session.js";
@@ -40,6 +42,7 @@ async function bootstrapTaskPane(info) {
   const storage = getAppStorage();
   const migratedModel = await migrateLegacyLocalStorageOnce(storage);
   const persistedModel = await loadPreferredChatModel();
+  const persistedThinking = await loadPreferredThinkingLevel();
 
   renderApp();
 
@@ -53,7 +56,9 @@ async function bootstrapTaskPane(info) {
 
   const controls = queryTaskPaneControls();
   const agentHolder = {
-    agent: createWordAgent(migratedModel ?? persistedModel ?? getDefaultWordModel()),
+    agent: createWordAgent(migratedModel ?? persistedModel ?? getDefaultWordModel(), {
+      thinkingLevel: persistedThinking,
+    }),
   };
 
   return { controls, agentHolder };
@@ -64,6 +69,7 @@ async function bootstrapTaskPane(info) {
  */
 async function init(info) {
   const { controls, agentHolder } = await bootstrapTaskPane(info);
+  attachPreferredThinkingLevelUnloadSync(agentHolder);
   await mountChatPanel(controls.chatMount, agentHolder);
   attachSessionAutosave(agentHolder.agent);
   wireSettingsButton(controls.settingsBtn);

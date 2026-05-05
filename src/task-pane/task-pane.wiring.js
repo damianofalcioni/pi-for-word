@@ -15,7 +15,13 @@ import {
   createWordTools,
   getDefaultWordModel,
 } from "../assistant/index.js";
-import { loadPreferredChatModel, persistPreferredChatModel, Pi4WordProxyTab } from "../settings/index.js";
+import {
+  loadPreferredChatModel,
+  loadPreferredThinkingLevel,
+  persistPreferredChatModel,
+  persistPreferredThinkingLevel,
+  Pi4WordProxyTab,
+} from "../settings/index.js";
 import { attachSessionAutosave, sessionRef } from "./task-pane.session.js";
 import { setStatus } from "./task-pane.boundary.js";
 
@@ -42,6 +48,10 @@ export async function mountChatPanel(chatMount, agentHolder) {
     await chatPanel.setAgent(agentHolder.agent, {
       onApiKeyRequired: (provider) => ApiKeyPromptDialog.prompt(provider),
       toolsFactory: () => createWordTools(),
+      onBeforeSend: async () => {
+        const agent = agentHolder.agent;
+        await persistPreferredThinkingLevel(agent.state.thinkingLevel);
+      },
       // ModelSelector updates agent.state.model without re-rendering AgentInterface (pi-web-ui).
       onModelSelect: () => {
         const agent = agentHolder.agent;
@@ -114,7 +124,10 @@ export function wireNewSessionButton(controls, agentHolder) {
     sessionRef.current = undefined;
     sessionRef.title = "";
     const preferred = await loadPreferredChatModel();
-    agentHolder.agent = createWordAgent(preferred ?? getDefaultWordModel());
+    const preferredThinking = await loadPreferredThinkingLevel();
+    agentHolder.agent = createWordAgent(preferred ?? getDefaultWordModel(), {
+      thinkingLevel: preferredThinking,
+    });
     await agentHolder.bindChatPanel();
     attachSessionAutosave(agentHolder.agent);
     setStatus("New chat.", false);
