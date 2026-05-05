@@ -49,8 +49,8 @@ async function bootstrapTaskPane(info) {
   const inWord = computeWordHost(info);
   setStatus(
     inWord
-      ? "Connected to Word — use Settings for API keys and model."
-      : "Open in Word for document tools; chat works in the browser for testing.",
+      ? "Connected to Word"
+      : "Open in Word",
     false,
   );
 

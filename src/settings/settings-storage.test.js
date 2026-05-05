@@ -31,8 +31,8 @@ test("parseSettings merges known fields", () => {
 
 test("serializeSettings roundtrips parseSettings", () => {
   const a = {
-    provider: "anthropic",
-    modelId: "claude-sonnet-4-20250514",
+    provider: "openai",
+    modelId: "gpt-5.5",
     apiKey: "k",
     useProxy: false,
     proxyUrl: "",

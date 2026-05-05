@@ -1,5 +1,5 @@
 /**
- * Settings surface for the composition root: Pi `streamProxy` Settings tab (`Pi4WordProxyTab`),
+ * Settings surface for the composition root: Providers tab label + Proxy tab (CORS + Pi `streamProxy`),
  * preferred chat model helpers, and pi-web-ui IndexedDB bootstrap plus one-time legacy
  * `localStorage` migration (`initPiWebStorage`, `migrateLegacyLocalStorageOnce`).
  *
@@ -8,7 +8,8 @@
  *
  * @module settings
  */
-export { Pi4WordProxyTab } from "./pi4word-proxy-tab.js";
+export { Pi4WordProvidersTab } from "./providers-tab.js";
+export { Pi4WordProxySettingsTab } from "./pi4word-proxy-tab.js";
 export {
   loadPreferredChatModel,
   persistPreferredChatModel,

@@ -2,10 +2,11 @@ import { Agent, streamProxy } from "@mariozechner/pi-agent-core";
 import { getModel } from "@mariozechner/pi-ai";
 import { createStreamFn, defaultConvertToLlm, getAppStorage } from "@mariozechner/pi-web-ui";
 import { attachPreferredThinkingLevelPersistence, isThinkingLevel } from "../settings/preferred-thinking-level.js";
+import { DEFAULT_SETTINGS } from "../settings/settings-storage.js";
 import { createWordTools } from "./word-tools.js";
 
 export const SYSTEM_PROMPT = `You are an AI assistant embedded in Microsoft Word. You help the user draft and edit documents.
-Use the provided tools to read the current selection and to insert or replace content when the user asks you to change the document.
+Use the provided tools to read the current selection (as Markdown) and to insert or replace content when the user asks you to change the document.
 Use word_insert_markdown for all inserts and replacements in Word (Markdown is rendered; plain prose is valid Markdown).
 Pass where as exactly one of: after_selection, replace_selection, end_of_document (or aliases after, replace, end).
 Pass content in markdown (not text).
@@ -68,7 +69,10 @@ export function createWordAgent(model, opts = {}) {
  * Default model when no migration or session provides one.
  */
 export function getDefaultWordModel() {
-  return getModel("anthropic", "claude-sonnet-4-20250514");
+  return getModel(
+    /** @type {import("@mariozechner/pi-ai").KnownProvider} */ (DEFAULT_SETTINGS.provider),
+    /** @type {any} */ (DEFAULT_SETTINGS.modelId),
+  );
 }
 
 /**

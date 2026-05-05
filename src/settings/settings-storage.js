@@ -11,8 +11,8 @@ export const SETTINGS_KEY = "pi4word.settings.v1";
 
 /** @type {PiWordSettings} */
 export const DEFAULT_SETTINGS = {
-  provider: "anthropic",
-  modelId: "claude-sonnet-4-20250514",
+  provider: "openai",
+  modelId: "gpt-5.5",
   apiKey: "",
   useProxy: false,
   proxyUrl: "",

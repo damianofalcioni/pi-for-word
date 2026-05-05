@@ -58,3 +58,5 @@ Exactly **one primary** type per task:
 ## LLM prompts (optional)
 
 Pick **one primary file**; touch at most **5** unless restructuring. Mention the barrel **`index.js`** when contracts change, and cite an existing **`*.test.js`** when relevant.
+
+**Pi4Word:** **`SYSTEM_PROMPT`** lives in **`src/assistant/pi-assistant.js`**; **Word tool** names, parameters, and behavior live in **`src/assistant/word-tools.js`**. When you change selection/read semantics, insert placement, or model instructions, update **`SPECS.md`** (product summary and **Assistant** bullet) so the spec, prompt, and tools stay aligned.

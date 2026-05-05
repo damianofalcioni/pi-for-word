@@ -58,6 +58,16 @@ body {
   align-items: center;
 }
 
+.app-toolbar .toolbar-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  flex-shrink: 0;
+}
+
 .app-main {
   flex: 1;
   display: flex;
@@ -294,7 +304,7 @@ settings-dialog div[class*="md:hidden"][class*="flex-shrink-0"] {
 
 /*
  * Active settings section = Pi4Word primary (accent). Default activeTabIndex is 0, matching
- * Providers & Models first in task-pane.wiring.js; switching tabs moves bg-secondary / border-b-2 in the DOM.
+ * Providers first in task-pane.wiring.js; switching tabs moves bg-secondary / border-b-2 in the DOM.
  */
 settings-dialog div.w-64.space-y-1 > button.bg-secondary {
   background: var(--accent) !important;
@@ -317,6 +327,47 @@ settings-dialog div[class*="md:hidden"][class*="flex-shrink-0"] > button.border-
 settings-dialog div[class*="md:hidden"][class*="flex-shrink-0"] > button.border-b-2:hover:not(:disabled) {
   background: var(--accent-hover) !important;
   border-color: var(--accent-hover) !important;
+}
+
+/*
+ * mini-lit Switch: global `button` padding + background breaks the pill track; hover background
+ * can mask checked/unchecked colors. Reset chrome and use theme vars + Pi4Word accent when on.
+ */
+settings-dialog button[role="switch"] {
+  padding: 0 !important;
+  min-height: 0;
+  border-radius: 9999px;
+  border: 2px solid transparent !important;
+  color: inherit;
+  /* win over generic `button { background: … }` */
+  background: var(--input) !important;
+}
+
+settings-dialog button[role="switch"][aria-checked="true"] {
+  background: var(--accent) !important;
+}
+
+settings-dialog button[role="switch"]:hover:not(:disabled) {
+  /* avoid flat gray from global button:hover */
+  filter: brightness(1.08);
+}
+
+settings-dialog button[role="switch"][aria-checked="true"]:hover:not(:disabled) {
+  background: var(--accent-hover) !important;
+  filter: none;
+}
+
+settings-dialog button[role="switch"][aria-checked="false"]:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--input) 88%, var(--foreground)) !important;
+  filter: none;
+}
+
+settings-dialog button[role="switch"] > span {
+  background-color: var(--background) !important;
+}
+
+settings-dialog button[role="switch"]:disabled {
+  opacity: 0.5;
 }
 
 .fixed.inset-0 .flex.justify-end {
@@ -515,6 +566,11 @@ h3 {
     flex-direction: column;
     align-items: stretch;
   }
+}
+
+/* Pi web UI user rows use justify-start; anchor bubbles on the right like typical chat UIs */
+user-message > .flex.justify-start.mx-4 {
+  justify-content: flex-end;
 }
 
 /* Pi web UI ships light-oriented message chrome; tune for dark shell */

@@ -1,11 +1,8 @@
 import {
   ApiKeyPromptDialog,
-  ApiKeysTab,
   ChatPanel,
   getAppStorage,
   ModelSelector,
-  ProxyTab,
-  ProvidersModelsTab,
   SessionListDialog,
   SettingsDialog,
 } from "@mariozechner/pi-web-ui";
@@ -22,7 +19,8 @@ import {
   loadPreferredThinkingLevel,
   persistPreferredChatModel,
   persistPreferredThinkingLevel,
-  Pi4WordProxyTab,
+  Pi4WordProvidersTab,
+  Pi4WordProxySettingsTab,
 } from "../settings/index.js";
 import { attachSessionAutosave, sessionRef } from "./task-pane.session.js";
 import { setStatus } from "./task-pane.boundary.js";
@@ -80,12 +78,7 @@ export async function mountChatPanel(chatMount, agentHolder) {
 /** @param {HTMLButtonElement} settingsBtn */
 export function wireSettingsButton(settingsBtn) {
   settingsBtn.addEventListener("click", () => {
-    void SettingsDialog.open([
-      new ProvidersModelsTab(),
-      new ProxyTab(),
-      new ApiKeysTab(),
-      new Pi4WordProxyTab(),
-    ]);
+    void SettingsDialog.open([new Pi4WordProvidersTab(), new Pi4WordProxySettingsTab()]);
   });
 }
 
