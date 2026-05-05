@@ -2,6 +2,7 @@ import {
   ApiKeyPromptDialog,
   ApiKeysTab,
   ChatPanel,
+  createJavaScriptReplTool,
   getAppStorage,
   ModelSelector,
   ProxyTab,
@@ -47,7 +48,12 @@ export async function mountChatPanel(chatMount, agentHolder) {
   const bindChatPanel = async () => {
     await chatPanel.setAgent(agentHolder.agent, {
       onApiKeyRequired: (provider) => ApiKeyPromptDialog.prompt(provider),
-      toolsFactory: () => createWordTools(),
+      toolsFactory: (_agent, _agentInterface, artifactsPanel, runtimeProvidersFactory) => {
+        const replTool = createJavaScriptReplTool();
+        replTool.runtimeProvidersFactory = runtimeProvidersFactory;
+        replTool.sandboxUrlProvider = artifactsPanel.sandboxUrlProvider;
+        return [...createWordTools(), replTool];
+      },
       onBeforeSend: async () => {
         const agent = agentHolder.agent;
         await persistPreferredThinkingLevel(agent.state.thinkingLevel);

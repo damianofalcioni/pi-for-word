@@ -51,7 +51,7 @@ export async function loadPreferredThinkingLevel() {
     return cached;
   }
 
-  let raw = null;
+  let raw;
   try {
     raw = await getAppStorage().settings.get(PREFERRED_THINKING_LEVEL_KEY);
   } catch (e) {
