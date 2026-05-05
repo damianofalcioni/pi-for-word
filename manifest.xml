@@ -70,13 +70,13 @@
         <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/public/index.html"/>
       </bt:Urls>
       <bt:ShortStrings>
-        <bt:String id="GetStarted.Title" DefaultValue="Pi4Word"/>
-        <bt:String id="CommandsGroup.Label" DefaultValue="Pi4Word"/>
-        <bt:String id="TaskpaneButton.Label" DefaultValue="Open Pi4Word"/>
+        <bt:String id="GetStarted.Title" DefaultValue="Pi Agent"/>
+        <bt:String id="CommandsGroup.Label" DefaultValue="Pi Agent"/>
+        <bt:String id="TaskpaneButton.Label" DefaultValue="Open Pi Agent"/>
       </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="GetStarted.Description" DefaultValue="Chat with an AI assistant and edit the document using Pi Agent tools."/>
-        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Open the Pi4Word assistant task pane."/>
+        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Open the Pi Agent assistant task pane."/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
