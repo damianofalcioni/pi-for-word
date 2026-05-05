@@ -36,21 +36,23 @@ const MARKDOWN_HTML_SANITIZE = {
   ADD_ATTR: ["checked", "disabled", "type"],
 };
 
-/** @type {Readonly<Record<string, "after_selection" | "replace_selection" | "end_of_document">>} */
+/** @type {Readonly<Record<string, "after_selection" | "before_selection" | "replace_selection" | "end_of_document">>} */
 const WORD_INSERT_WHERE_ALIASES = {
   after_selection: "after_selection",
+  before_selection: "before_selection",
   replace_selection: "replace_selection",
   end_of_document: "end_of_document",
   end: "end_of_document",
   document_end: "end_of_document",
   after: "after_selection",
+  before: "before_selection",
   replace: "replace_selection",
 };
 
 /**
  * @param {unknown} where
  * @param {string} toolName
- * @returns {"after_selection" | "replace_selection" | "end_of_document"}
+ * @returns {"after_selection" | "before_selection" | "replace_selection" | "end_of_document"}
  */
 function normalizeWordInsertWhere(where, toolName) {
   if (typeof where !== "string") {
@@ -61,11 +63,12 @@ function normalizeWordInsertWhere(where, toolName) {
   const normalized = WORD_INSERT_WHERE_ALIASES[where] ?? where;
   if (
     normalized !== "after_selection" &&
+    normalized !== "before_selection" &&
     normalized !== "replace_selection" &&
     normalized !== "end_of_document"
   ) {
     throw new Error(
-      `Invalid ${toolName} "where": ${JSON.stringify(where)}. Use exactly "after_selection", "replace_selection", or "end_of_document" (short aliases: after, replace, end).`,
+      `Invalid ${toolName} "where": ${JSON.stringify(where)}. Use exactly "after_selection", "before_selection", "replace_selection", or "end_of_document" (short aliases: after, before, replace, end).`,
     );
   }
   return normalized;
@@ -122,16 +125,18 @@ function markdownToWordHtml(markdown) {
 const WORD_INSERT_WHERE_UNION = Type.Union(
   [
     Type.Literal("after_selection"),
+    Type.Literal("before_selection"),
     Type.Literal("replace_selection"),
     Type.Literal("end_of_document"),
     Type.Literal("after"),
+    Type.Literal("before"),
     Type.Literal("replace"),
     Type.Literal("end"),
     Type.Literal("document_end"),
   ],
   {
     description:
-      'Placement: "after_selection" | "replace_selection" | "end_of_document" (aliases: after, replace, end, document_end).',
+      'Placement: "after_selection" | "before_selection" | "replace_selection" | "end_of_document" (aliases: after, before, replace, end, document_end).',
   },
 );
 
@@ -187,7 +192,7 @@ function wordInsertMarkdownTool() {
     name: "word_insert_markdown",
     label: "Insert into Word",
     description:
-      'Use this for every insert/replace into Word. GitHub-flavored Markdown is converted to HTML, sanitized with DOMPurify, then inserted (plain paragraphs work fine; headings, lists, bold/italic, links, tables, fenced code when needed). Placement: where="after_selection" | "replace_selection" | "end_of_document" (aliases: after, replace, end, document_end).',
+      'Use this for every insert/replace into Word. GitHub-flavored Markdown is converted to HTML, sanitized with DOMPurify, then inserted (plain paragraphs work fine; headings, lists, bold/italic, links, tables, fenced code when needed). Placement: where="after_selection" | "before_selection" | "replace_selection" | "end_of_document" (aliases: after, before, replace, end, document_end).',
     parameters: Type.Object({
       markdown: Type.String({
         description:
@@ -218,6 +223,8 @@ function wordInsertMarkdownTool() {
           const range = context.document.getSelection();
           if (where === "replace_selection") {
             range.insertHtml(html, Word.InsertLocation.replace);
+          } else if (where === "before_selection") {
+            range.insertHtml(html, Word.InsertLocation.before);
           } else {
             range.insertHtml(html, Word.InsertLocation.after);
           }

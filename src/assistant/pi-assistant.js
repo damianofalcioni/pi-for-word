@@ -5,13 +5,8 @@ import { attachPreferredThinkingLevelPersistence, isThinkingLevel } from "../set
 import { DEFAULT_SETTINGS } from "../settings/settings-storage.js";
 import { createWordTools } from "./word-tools.js";
 
-export const SYSTEM_PROMPT = `You are an AI assistant embedded in Microsoft Word. You help the user draft and edit documents.
-Use the provided tools to read the current selection (as Markdown) and to insert or replace content when the user asks you to change the document.
-Use word_insert_markdown for all inserts and replacements in Word (Markdown is rendered; plain prose is valid Markdown).
-Pass where as exactly one of: after_selection, replace_selection, end_of_document (or aliases after, replace, end).
-Pass content in markdown (not text).
-For javascript_repl, pass title plus JavaScript in code (or script as an alias for code).
-Be concise; prefer applying edits via tools when appropriate instead of only describing what to type.`;
+export const SYSTEM_PROMPT = `You are an AI assistant embedded in Microsoft Word. You help the user draft and edit documents. 
+Be concise and prefer to use the available tools when possible.`;
 
 /**
  * Builds a stream function that prefers Pi Agent `streamProxy` when enabled in settings,
