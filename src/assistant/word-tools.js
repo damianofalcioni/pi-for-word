@@ -1,4 +1,4 @@
-import { Type } from "@sinclair/typebox";
+import { Type } from "typebox";
 
 /** @returns {import("@mariozechner/pi-agent-core").AgentTool} */
 function wordGetSelectionTool() {

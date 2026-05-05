@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0" xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="TaskPaneApp">
   <Id>1d92f7f2-7b2c-4b2b-9a8a-6e1c40e8b7f1</Id>
-  <Version>0.1.0.0</Version>
+  <Version>0.1.1.0</Version>
   <ProviderName>Pi4Word</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Pi4Word"/>
   <Description DefaultValue="Pi4Word — AI assistant in Word powered by Pi Agent (pi-agent-core)."/>
-  <IconUrl DefaultValue="https://localhost:3000/public/assets/icon-32.png"/>
-  <HighResolutionIconUrl DefaultValue="https://localhost:3000/public/assets/icon-128.png"/>
+  <IconUrl DefaultValue="https://localhost:3000/public/assets/icon-32.png?v=0.1.1.0"/>
+  <HighResolutionIconUrl DefaultValue="https://localhost:3000/public/assets/icon-128.png?v=0.1.1.0"/>
   <SupportUrl DefaultValue="https://localhost:3000/public"/>
   <AppDomains>
     <AppDomain>https://localhost:3000/public</AppDomain>
@@ -61,22 +61,22 @@
     </Hosts>
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon.16x16" DefaultValue="https://localhost:3000/public/assets/icon-16.png"/>
-        <bt:Image id="Icon.32x32" DefaultValue="https://localhost:3000/public/assets/icon-32.png"/>
-        <bt:Image id="Icon.80x80" DefaultValue="https://localhost:3000/public/assets/icon-80.png"/>
+        <bt:Image id="Icon.16x16" DefaultValue="https://localhost:3000/public/assets/icon-16.png?v=0.1.1.0"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://localhost:3000/public/assets/icon-32.png?v=0.1.1.0"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://localhost:3000/public/assets/icon-80.png?v=0.1.1.0"/>
       </bt:Images>
       <bt:Urls>
         <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://localhost:3000/public"/>
         <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/public/index.html"/>
       </bt:Urls>
       <bt:ShortStrings>
-        <bt:String id="GetStarted.Title" DefaultValue="Pi Agent"/>
-        <bt:String id="CommandsGroup.Label" DefaultValue="Pi Agent"/>
-        <bt:String id="TaskpaneButton.Label" DefaultValue="Open Pi Agent"/>
+        <bt:String id="GetStarted.Title" DefaultValue="Pi4Word"/>
+        <bt:String id="CommandsGroup.Label" DefaultValue="Pi4Word"/>
+        <bt:String id="TaskpaneButton.Label" DefaultValue="Open Pi4Word"/>
       </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="GetStarted.Description" DefaultValue="Chat with an AI assistant and edit the document using Pi Agent tools."/>
-        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Open the Pi Agent assistant task pane."/>
+        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Open the Pi4Word assistant task pane."/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
