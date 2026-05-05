@@ -51,19 +51,24 @@ The build runs tests, linting, and `scripts/esbuild.mjs`. Output is written to `
 
 Use [`manifest.production.xml`](https://damianofalcioni.github.io/pi-for-word/manifest.production.xml) to load the production add-in in Word. This manifest points Word to the public GitHub Pages build at `https://damianofalcioni.github.io/pi-for-word/public/`.
 
-### Word on Windows
-
-1. Copy [`manifest.production.xml`](https://damianofalcioni.github.io/pi-for-word/manifest.production.xml) to a folder that Word can use as a shared add-in catalog.
-2. In Word, open **File > Options > Trust Center > Trust Center Settings > Trusted Add-in Catalogs**.
-3. Add the folder path as a trusted catalog, select **Show in Menu**, then restart Word.
-4. Open **Home > Add-ins > Shared Folder**, select **Pi4Word**, and add it to the document.
-
 ### Word on the Web
 
 1. Open a document in Word on the web.
-2. Open **Insert > Add-ins > More Add-ins**.
+2. Open **Insert > Add-ins > Advanced...**.
 3. Choose **Upload My Add-in**.
 4. Select [`manifest.production.xml`](https://damianofalcioni.github.io/pi-for-word/manifest.production.xml).
+
+After the add-in is loaded, use **Open Pi4Word** from the Word ribbon.
+
+### Word on Windows
+
+1. Create a local folder for the add-in catalog, for example `C:\OfficeAddinCatalog`.
+2. Copy [`manifest.production.xml`](https://damianofalcioni.github.io/pi-for-word/manifest.production.xml) into that folder.
+3. Right-click the folder, open **Properties > Sharing > Advanced Sharing**, enable **Share this folder**, and make sure your Windows user has at least read access.
+4. Copy the folder's network path from the **Sharing** tab, for example `\\YOUR-PC\OfficeAddinCatalog`. Use this network path in Word, not the local `C:\...` path.
+5. In Word, open **File > Options > Trust Center > Trust Center Settings > Trusted Add-in Catalogs**.
+6. Paste the network path into **Catalog Url**, select **Add catalog**, enable **Show in Menu** for that catalog, select **OK**, then restart Word.
+7. Open **Home > Add-ins > Shared Folder**, select **Pi4Word**, and add it to the document.
 
 After the add-in is loaded, use **Open Pi4Word** from the Word ribbon.
 
