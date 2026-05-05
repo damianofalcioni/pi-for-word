@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "description": "Pi4Word — Pi Agent assistant as a Word add-in",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {
     "cert": "powershell -ExecutionPolicy Bypass -File scripts/setup-cert.ps1",
     "serve": "npx -y http-server . -S -C certs/cert.pem -K certs/cert.pem -p 3000",
