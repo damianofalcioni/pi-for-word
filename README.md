@@ -2,6 +2,11 @@
 
 **Pi4Word** is a Microsoft Word task pane add-in that embeds a Pi Agent–powered assistant ([`@mariozechner/pi-agent-core`](https://www.npmjs.com/package/@mariozechner/pi-agent-core)).
 
+
+<p align="center">
+  <img src="./docs/assets/screenshot-panel.jpg" alt="Main UI" width="400"/>
+</p>
+
 **Architecture, behavior, tools, storage, and streaming:** see **[SPECS.md](./SPECS.md)**.
 
 ## Local development
