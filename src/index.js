@@ -1,7 +1,7 @@
 import "@mariozechner/pi-web-ui/app.css";
 import "./index.css";
 
-import { initializeTaskPane } from "./task-pane/task-pane.init.js";
+import { initializeTaskPane } from "./task-pane/index.js";
 
 function showBootError(msg) {
   const root = document.getElementById("app-root");

@@ -1,4 +1,0 @@
-# Ignore all paths under public/ except what we explicitly track.
-*
-!index.html
-!.gitignore
