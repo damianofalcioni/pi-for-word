@@ -9,6 +9,7 @@ import {
   SessionListDialog,
   SettingsDialog,
 } from "@mariozechner/pi-web-ui";
+import { registerCollapsibleWordToolRenderers } from "../assistant/collapsible-default-tool-renderer.js";
 import { createPi4WordJavaScriptReplTool } from "../assistant/javascript-repl-tool.js";
 import {
   createWordAgent,
@@ -25,6 +26,8 @@ import {
 } from "../settings/index.js";
 import { attachSessionAutosave, sessionRef } from "./task-pane.session.js";
 import { setStatus } from "./task-pane.boundary.js";
+
+registerCollapsibleWordToolRenderers();
 
 export function queryTaskPaneControls() {
   const chatMount = document.getElementById("chatMount");

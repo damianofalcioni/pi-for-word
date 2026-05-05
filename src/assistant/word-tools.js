@@ -57,6 +57,24 @@ function requireToolString(toolName, field, value) {
   return value;
 }
 
+/** Placeholder for literal backslash while unescaping (private-use, unlikely in user text). */
+const _UNESC_BACKSLASH_PH = "\uE000";
+
+/**
+ * Tool arguments sometimes keep JSON-style escapes as two-character sequences (e.g. backslash + "n")
+ * instead of a real newline. Converts those to real characters; use `\\` for a literal backslash.
+ * @param {string} s
+ * @returns {string}
+ */
+function unescapeToolStringEscapes(s) {
+  return s
+    .replace(/\\\\/g, _UNESC_BACKSLASH_PH)
+    .replace(/\\n/g, "\n")
+    .replace(/\\r/g, "\r")
+    .replace(/\\t/g, "\t")
+    .replace(new RegExp(_UNESC_BACKSLASH_PH, "g"), "\\");
+}
+
 /**
  * @param {string} markdown
  * @returns {string}
@@ -73,6 +91,22 @@ function markdownToWordHtml(markdown) {
   }
   return DOMPurify.sanitize(raw, MARKDOWN_HTML_SANITIZE);
 }
+
+const WORD_INSERT_WHERE_UNION = Type.Union(
+  [
+    Type.Literal("after_selection"),
+    Type.Literal("replace_selection"),
+    Type.Literal("end_of_document"),
+    Type.Literal("after"),
+    Type.Literal("replace"),
+    Type.Literal("end"),
+    Type.Literal("document_end"),
+  ],
+  {
+    description:
+      'Placement: "after_selection" | "replace_selection" | "end_of_document" (aliases: after, replace, end, document_end).',
+  },
+);
 
 /** @returns {import("@mariozechner/pi-agent-core").AgentTool} */
 function wordGetSelectionTool() {
@@ -115,88 +149,26 @@ function wordGetSelectionTool() {
 }
 
 /** @returns {import("@mariozechner/pi-agent-core").AgentTool} */
-function wordInsertTextTool() {
-  return {
-    name: "word_insert_text",
-    label: "Insert text into Word",
-    description:
-      'Inserts text in Word. Use where="after_selection" (after caret/selection), "replace_selection" (replace highlighted text), or "end_of_document" (append at document end). Shorthand where values end, after, replace, document_end are also accepted.',
-    parameters: Type.Object({
-      text: Type.String({ description: "Text to insert." }),
-      where: Type.Union(
-        [
-          Type.Literal("after_selection"),
-          Type.Literal("replace_selection"),
-          Type.Literal("end_of_document"),
-          Type.Literal("after"),
-          Type.Literal("replace"),
-          Type.Literal("end"),
-          Type.Literal("document_end"),
-        ],
-        {
-          description:
-            'Placement: "after_selection" | "replace_selection" | "end_of_document" (aliases: after, replace, end, document_end).',
-        },
-      ),
-    }),
-    execute: async (_id, params) => {
-      if (typeof Word === "undefined") {
-        throw new Error("Word API is not available outside Microsoft Word.");
-      }
-      const text = requireToolString("word_insert_text", "text", params.text);
-      const where = normalizeWordInsertWhere(params.where, "word_insert_text");
-      return Word.run(async (context) => {
-        if (where === "end_of_document") {
-          const body = context.document.body;
-          body.insertParagraph(text, Word.InsertLocation.end);
-        } else {
-          const range = context.document.getSelection();
-          if (where === "replace_selection") {
-            range.insertText(text, Word.InsertLocation.replace);
-          } else {
-            range.insertText(text, Word.InsertLocation.after);
-          }
-        }
-        await context.sync();
-        return {
-          content: [{ type: "text", text: "Inserted text successfully." }],
-          details: { where },
-        };
-      });
-    },
-  };
-}
-
-/** @returns {import("@mariozechner/pi-agent-core").AgentTool} */
 function wordInsertMarkdownTool() {
   return {
     name: "word_insert_markdown",
-    label: "Insert rendered Markdown into Word",
+    label: "Insert into Word",
     description:
-      'Converts GitHub-flavored Markdown to HTML, sanitizes output with DOMPurify, then inserts into Word (headings, lists, bold/italic, links, tables, fenced code). Same placement as word_insert_text: where="after_selection" | "replace_selection" | "end_of_document" (aliases: after, replace, end, document_end). Prefer over word_insert_text when structure or rich formatting matters.',
+      'Use this for every insert/replace into Word. GitHub-flavored Markdown is converted to HTML, sanitized with DOMPurify, then inserted (plain paragraphs work fine; headings, lists, bold/italic, links, tables, fenced code when needed). Placement: where="after_selection" | "replace_selection" | "end_of_document" (aliases: after, replace, end, document_end).',
     parameters: Type.Object({
-      markdown: Type.String({ description: "Markdown source to render and insert." }),
-      where: Type.Union(
-        [
-          Type.Literal("after_selection"),
-          Type.Literal("replace_selection"),
-          Type.Literal("end_of_document"),
-          Type.Literal("after"),
-          Type.Literal("replace"),
-          Type.Literal("end"),
-          Type.Literal("document_end"),
-        ],
-        {
-          description:
-            'Placement: "after_selection" | "replace_selection" | "end_of_document" (aliases: after, replace, end, document_end).',
-        },
-      ),
+      markdown: Type.String({
+        description:
+          "Markdown to render and insert. Plain text counts as Markdown; line breaks via real newlines or escapes \\n, \\r, \\t; use \\\\ for a literal backslash.",
+      }),
+      where: WORD_INSERT_WHERE_UNION,
     }),
     execute: async (_id, params) => {
       if (typeof Word === "undefined") {
         throw new Error("Word API is not available outside Microsoft Word.");
       }
-      const markdown = requireToolString("word_insert_markdown", "markdown", params.markdown);
+      const markdown = unescapeToolStringEscapes(
+        requireToolString("word_insert_markdown", "markdown", params.markdown),
+      );
       const where = normalizeWordInsertWhere(params.where, "word_insert_markdown");
       const html = markdownToWordHtml(markdown);
       if (!html) {
@@ -219,7 +191,7 @@ function wordInsertMarkdownTool() {
         }
         await context.sync();
         return {
-          content: [{ type: "text", text: "Inserted rendered Markdown successfully." }],
+          content: [{ type: "text", text: "Inserted into Word successfully." }],
           details: { where },
         };
       });
@@ -232,5 +204,5 @@ function wordInsertMarkdownTool() {
  * @returns {import("@mariozechner/pi-agent-core").AgentTool[]}
  */
 export function createWordTools() {
-  return [wordGetSelectionTool(), wordInsertTextTool(), wordInsertMarkdownTool()];
+  return [wordGetSelectionTool(), wordInsertMarkdownTool()];
 }

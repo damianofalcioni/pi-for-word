@@ -16,6 +16,6 @@
 
 - **Task pane startup:** **`initializeTaskPane()`** schedules **`Office.onReady`** (or starts without host context if Office.js is missing) and a **2.5s** fallback if the app has not started. **`bootstrapTaskPane`** runs **`initPiWebStorage()`** (IndexedDB stores and **`setAppStorage`**), **`migrateLegacyLocalStorageOnce`** when applicable, **`renderApp`**, **`mountChatPanel`** + **`setAgent`** (Word tools, API key prompt, model selector), **`attachSessionAutosave`**, and toolbar handlers for **Settings**, **Sessions**, and **New chat** (pi-web-ui dialogs / session list).
 - **Settings:** Users configure model, API keys, CORS proxy, and Pi **`streamProxy`** (including a **Pi4Word proxy** tab for URL and token).
-- **Assistant:** Pi agent wiring, prompts, and **`defaultConvertToLlm`** integrate **Word tools** **`word_get_selection`** and **`word_insert_text`** with the chat stream.
+- **Assistant:** Pi agent wiring, prompts, and **`defaultConvertToLlm`** integrate **Word tools** **`word_get_selection`** and **`word_insert_markdown`** with the chat stream.
 - **Sessions:** Session titles and autosave behavior for titles and persistence are handled in the task-pane layer (preview/save helpers).
 - **Static shell:** **`public/index.html`** provides the mount point; **`manifest.xml`** defines the add-in manifest for Word.
