@@ -2,7 +2,6 @@ import {
   ApiKeyPromptDialog,
   ApiKeysTab,
   ChatPanel,
-  createJavaScriptReplTool,
   getAppStorage,
   ModelSelector,
   ProxyTab,
@@ -10,6 +9,7 @@ import {
   SessionListDialog,
   SettingsDialog,
 } from "@mariozechner/pi-web-ui";
+import { createPi4WordJavaScriptReplTool } from "../assistant/javascript-repl-tool.js";
 import {
   createWordAgent,
   createWordAgentFromSession,
@@ -49,7 +49,7 @@ export async function mountChatPanel(chatMount, agentHolder) {
     await chatPanel.setAgent(agentHolder.agent, {
       onApiKeyRequired: (provider) => ApiKeyPromptDialog.prompt(provider),
       toolsFactory: (_agent, _agentInterface, artifactsPanel, runtimeProvidersFactory) => {
-        const replTool = createJavaScriptReplTool();
+        const replTool = createPi4WordJavaScriptReplTool();
         replTool.runtimeProvidersFactory = runtimeProvidersFactory;
         replTool.sandboxUrlProvider = artifactsPanel.sandboxUrlProvider;
         return [...createWordTools(), replTool];
