@@ -1,4 +1,5 @@
 import * as esbuild from "esbuild";
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -44,3 +45,17 @@ await esbuild.build({
   },
   plugins: [resolveKatexFontsInPiWebUiCss()],
 });
+
+// pi-web-ui resolves the PDF.js worker as ./pdfjs-dist/build/pdf.worker.min.mjs
+// relative to the bundled script (public/index.min.js). Copy the worker from npm.
+const pdfWorkerSrc = path.join(
+  repoRoot,
+  "node_modules",
+  "pdfjs-dist",
+  "build",
+  "pdf.worker.min.mjs",
+);
+const pdfWorkerDestDir = path.join(repoRoot, "public", "pdfjs-dist", "build");
+const pdfWorkerDest = path.join(pdfWorkerDestDir, "pdf.worker.min.mjs");
+fs.mkdirSync(pdfWorkerDestDir, { recursive: true });
+fs.copyFileSync(pdfWorkerSrc, pdfWorkerDest);

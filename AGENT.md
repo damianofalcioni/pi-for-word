@@ -14,9 +14,11 @@ If **`SPECS.md`** is missing, recreate it with the same three sections as the co
 ## Repo layout
 
 * Features live under **`src/<feature>/`** (**`assistant`**, **`settings`**, **`task-pane`**). **`task-pane`** composes **`assistant`**, **`settings`**, and **`@mariozechner/pi-web-ui`**.
+* **`src/assistant-tools/`** — Word **`Word.run`** tools (**`index.js`** exports **`createWordTools`**). **`assistant`** imports **`assistant-tools`**; **`task-pane`** uses **`assistant`** only (via **`assistant/index.js`**).
+* **`src/shims/`** — small entry-time modules used from **`src/index.js`** (e.g. **`office-alert.js`** for Word hosts). **`process`** is supplied via esbuild **inject**/alias, not as a normal source import. **`scripts/esbuild.mjs`** may copy third-party assets into **`public/`** (PDF.js worker for pi-web-ui); see **Build/runtime** in **`SPECS.md`**.
 * **Do not import another feature’s internals** (`…/other-feature/foo.js`). **`task-pane`** may import **`assistant`** and **`settings`** only via **`src/<feature>/index.js`**; inside **`task-pane`**, use sibling **`task-pane.*.js`** as needed.
 * **`assistant`** / **`settings`**: **`index.js`** is the **only** import surface for **`task-pane`** — re-exports + **short top-of-file JSDoc** (purpose, main side effects, persistence). Update when **exports**, **cross-feature usage**, **persistence**, or **major side effects** change—not for trivial internal tweaks.
-* **`task-pane`**: **`index.js`** is the only import for **`src/index.js`** (typically **`initializeTaskPane`**); use a **short top-of-file JSDoc** and keep it in sync when that entry contract changes.
+* **`task-pane`**: **`index.js`** is the only **`src/<feature>/`** import from **`src/index.js`** (typically **`initializeTaskPane`**); use a **short top-of-file JSDoc** and keep it in sync when that entry contract changes.
 
 ---
 
@@ -59,4 +61,4 @@ Exactly **one primary** type per task:
 
 Pick **one primary file**; touch at most **5** unless restructuring. Mention the barrel **`index.js`** when contracts change, and cite an existing **`*.test.js`** when relevant.
 
-**Pi4Word:** **`SYSTEM_PROMPT`** lives in **`src/assistant/pi-assistant.js`**; **Word tool** names, parameters, and behavior live in **`src/assistant/word-tools.js`**. When you change selection/read semantics, insert placement, or model instructions, update **`SPECS.md`** (product summary and **Assistant** bullet) so the spec, prompt, and tools stay aligned.
+**Pi4Word:** **`SYSTEM_PROMPT`** lives in **`src/assistant/pi-assistant.js`**; **Word tools** live under **`src/assistant-tools/`** (**`index.js`** exports **`createWordTools`** and per-tool factories; **`word-tool-*.js`**, **`word-tools-search.js`**, **`word-tools-shared.js`**). When you change selection/read semantics, insert placement, or model instructions, update **`SPECS.md`** (product summary and **Assistant** bullet) so the spec, prompt, and tools stay aligned.

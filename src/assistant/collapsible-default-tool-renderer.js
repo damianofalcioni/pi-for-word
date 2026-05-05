@@ -7,7 +7,7 @@ import {
   renderCollapsibleHeader,
   renderHeader,
 } from "@mariozechner/pi-web-ui";
-import { createWordTools } from "./word-tools.js";
+import { createWordTools } from "../assistant-tools/index.js";
 
 /**
  * @param {unknown} params
@@ -182,7 +182,7 @@ function createCollapsibleDefaultRenderer(toolName) {
 
 let registered = false;
 
-/** Registers collapsible JSON renderers for all Word document tools (same names as `createWordTools`). */
+/** Registers collapsible JSON renderers for all Word document tools (same names as `createWordTools` from `assistant-tools`). */
 export function registerCollapsibleWordToolRenderers() {
   if (registered) {
     return;

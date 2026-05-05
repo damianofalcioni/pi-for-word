@@ -1,3 +1,4 @@
+import "./shims/office-alert.js";
 import "@mariozechner/pi-web-ui/app.css";
 import "./index.css";
 

@@ -7,7 +7,7 @@ import {
   SettingsDialog,
 } from "@mariozechner/pi-web-ui";
 import { registerCollapsibleWordToolRenderers } from "../assistant/collapsible-default-tool-renderer.js";
-import { createPi4WordJavaScriptReplTool } from "../assistant/javascript-repl-tool.js";
+import { createPi4WordJavaScriptReplTool } from "../assistant-tools/index.js";
 import {
   createWordAgent,
   createWordAgentFromSession,

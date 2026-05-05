@@ -104,6 +104,48 @@ message-editor textarea {
   box-sizing: border-box;
 }
 
+/*
+ * Attachment tiles (pi-web-ui): global `button { padding: … }` blows up the tiny remove control;
+ * Tailwind arbitrary variants for hover-only opacity may not ship in app.css — keep the X visible.
+ */
+attachment-tile button {
+  padding: 0 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  border-radius: 9999px !important;
+  background: var(--background) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--muted-foreground) !important;
+  opacity: 1 !important;
+  box-shadow: 0 1px 2px var(--shadow);
+}
+
+attachment-tile button:hover:not(:disabled) {
+  background: var(--muted) !important;
+  color: var(--foreground) !important;
+}
+
+/* Document fallback tiles use bg-muted; lift contrast against dark shell / user bubble */
+attachment-tile .border-input.bg-muted {
+  background: color-mix(in oklab, var(--foreground) 10%, var(--card)) !important;
+  color: var(--foreground) !important;
+}
+
+attachment-tile .border-input.bg-muted .text-muted-foreground {
+  color: color-mix(in oklab, var(--foreground) 72%, transparent) !important;
+}
+
+attachment-tile img {
+  opacity: 1 !important;
+}
+
 .app-header {
   display: flex;
   justify-content: space-between;
