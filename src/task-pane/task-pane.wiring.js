@@ -6,13 +6,13 @@ import {
   SessionListDialog,
   SettingsDialog,
 } from "@mariozechner/pi-web-ui";
-import { registerCollapsibleWordToolRenderers } from "../assistant/collapsible-default-tool-renderer.js";
-import { createPi4WordJavaScriptReplTool } from "../assistant-tools/index.js";
 import {
+  createPi4WordJavaScriptReplTool,
   createWordAgent,
   createWordAgentFromSession,
   createWordTools,
   getDefaultWordModel,
+  registerCollapsibleWordToolRenderers,
 } from "../assistant/index.js";
 import {
   loadPreferredChatModel,

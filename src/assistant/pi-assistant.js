@@ -1,8 +1,11 @@
 import { Agent, streamProxy } from "@mariozechner/pi-agent-core";
 import { getModel } from "@mariozechner/pi-ai";
 import { createStreamFn, defaultConvertToLlm, getAppStorage } from "@mariozechner/pi-web-ui";
-import { attachPreferredThinkingLevelPersistence, isThinkingLevel } from "../settings/preferred-thinking-level.js";
-import { DEFAULT_SETTINGS } from "../settings/settings-storage.js";
+import {
+  attachPreferredThinkingLevelPersistence,
+  DEFAULT_SETTINGS,
+  isThinkingLevel,
+} from "../settings/index.js";
 
 export const SYSTEM_PROMPT = `You are an AI assistant embedded in Microsoft Word. You help the user draft and edit documents.
 Be concise and prefer to use the available tools when possible.`;

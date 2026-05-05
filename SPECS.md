@@ -1,21 +1,141 @@
-# Pi4Word — specification
+# Pi4Word Specification
 
-## Product summary
+## Product Contract
 
-**Pi4Word** is a Word task pane add-in that runs an AI assistant powered by [`@mariozechner/pi-agent-core`](https://github.com/badlogic/pi-mono/tree/main/packages/agent) (`pi-agent-core` in pi-mono). The assistant reads the **current selection as GitHub-flavored Markdown** (Word **`Range.getHtml()`** → **Turndown** + **turndown-plugin-gfm**) and **inserts or replaces** content by rendering **Markdown → HTML** (**marked** + **DOMPurify**) into the document via the Word JS API. Registered tools also include a **document outline** reader (**`word_get_document_outline`**) and pi-web-ui’s **`javascript_repl`** (wrapped in Pi4Word as **`createPi4WordJavaScriptReplTool`** for relaxed `code` / `script` arguments). The UI is **`@mariozechner/pi-web-ui`**’s **`ChatPanel`** (mounted in **`#chatMount`** inside **`renderApp()`** after **`#app-root`** is cleared), composed from packages under **`src/`** (`settings`, `assistant`, `task-pane`, **`assistant-tools`**) per **`AGENT.md`**.
+Pi4Word is a Microsoft Word task pane add-in that embeds a Pi Agent assistant powered by [`@mariozechner/pi-agent-core`](https://github.com/badlogic/pi-mono/tree/main/packages/agent).
 
-## Core product constraints
+The assistant can read the current Word selection as GitHub-flavored Markdown, reason over the document through Word tools, and insert or replace content by rendering Markdown into sanitized HTML for the Word JavaScript API.
 
-- **Hosting:** Runs as an Office Word task pane; bootstrap uses **`Office.onReady`** with a bounded DOM-ready fallback timing.
-- **Storage:** Conversation and settings persistence use **IndexedDB** via pi-web-ui **`AppStorage`**; a **one-time migration** may move legacy **`localStorage`** shapes into provider keys and Pi4Word **`streamProxy`** settings.
-- **Networking:** LLM traffic uses a **composite stream function** (`createPi4WordStreamFn` in **`src/assistant/pi-assistant.js`**) — when Pi4Word **`pi4word.streamProxy`** settings are enabled (URL + token passed as Pi Agent **`streamProxy`** **`authToken`**), requests use **`streamProxy`** from **`@mariozechner/pi-agent-core`**; otherwise streaming uses pi-web-ui **`createStreamFn`** with the optional **CORS proxy URL** from **`proxy.enabled` / `proxy.url`** in **`AppStorage`**. The repository does **not** ship a backend; deployments supply their own **`streamProxy`** endpoint for secure key handling in production.
-- **Build/runtime:** Entry **`src/index.js`** imports **`./shims/office-alert.js`** first (Office Word task pane blocks native **`window.alert`**; **`@mariozechner/pi-web-ui`** uses **`alert`** for some attachment and paste errors), then **`@mariozechner/pi-web-ui/app.css`** and **`src/index.css`**. **esbuild** bundles JS to **`public/index.min.js`** (with **`process`** inject/alias, **`office-js`** external) and CSS to **`public/index.min.css`**, plus font assets under **`public/assets/`**. **`scripts/esbuild.mjs`** copies **`node_modules/pdfjs-dist/build/pdf.worker.min.mjs`** to **`public/pdfjs-dist/build/pdf.worker.min.mjs`** on every build so pi-web-ui can load the PDF.js worker beside the bundle (**worker URL is resolved from **`import.meta.url`** of **`index.min.js`**). The bundle includes **Markdown/HTML** helpers (**marked**, **DOMPurify**, **turndown**, **turndown-plugin-gfm**) for selection → Markdown and insert → HTML.
-- **Modularity:** Feature code lives under **`src/<feature>/`** with a single composition root in **`src/task-pane/`**; **`assistant`** and **`settings`** are consumed only via their **`index.js`** barrels. The app entry **`src/index.js`** imports **`task-pane`** as the only **`src/<feature>/`** module (through **`src/task-pane/index.js`**), plus entry **`shims`**, global styles, and **`initializeTaskPane`**.
+Core user-visible surfaces:
 
-## Functional specification
+- **Chat UI:** `@mariozechner/pi-web-ui` `ChatPanel`, mounted into `#chatMount`.
+- **Word reading:** `Range.getHtml()` -> Turndown + `turndown-plugin-gfm`, with text fallback.
+- **Word writing:** Markdown -> `marked` -> DOMPurify -> Word `insertHtml`.
+- **Settings:** model, provider API keys, CORS proxy, and Pi stream proxy.
+- **Sessions:** pi-web-ui session persistence with task-pane autosave/title helpers.
 
-- **Task pane startup:** **`initializeTaskPane()`** (**`src/task-pane/task-pane.init.js`**) calls **`scheduleOfficeBoot`** (**`src/task-pane/task-pane.office.js`**): it waits for **`DOMContentLoaded`** when needed, then **`Office.onReady`** (or **`startApp(null)`** if **`Office.onReady`** is unavailable), and a **2.5s** timeout fallback if **`Office.onReady`** never completes—then **`startApp`** runs with missing host context so the UI still mounts. **`bootstrapTaskPane`** runs **`initPiWebStorage()`**, **`migrateLegacyLocalStorageOnce`**, **`renderApp`** (builds **`#chatMount`** and toolbar inside **`#app-root`**), then **`init`** completes **`mountChatPanel`** ( **`new ChatPanel()`**, append to **`#chatMount`**, **`chatPanel.setAgent`** with **`toolsFactory`** returning **`createWordTools()`** plus the Pi4Word JS REPL tool, **`ApiKeyPromptDialog`**, **`ModelSelector`**), **`attachSessionAutosave`**, and toolbar handlers for **Settings**, **Sessions**, and **New chat** (pi-web-ui dialogs / session list). **`src/index.js`** also installs **`window`** **`error`** / **`unhandledrejection`** handlers that surface boot failures in **`#app-root`**.
-- **Settings:** Users configure model, API keys, CORS proxy, and Pi **`streamProxy`** (including a **Pi4Word proxy** tab for URL and token).
-- **Assistant:** Pi agent wiring, prompts (**`SYSTEM_PROMPT`** in **`src/assistant/pi-assistant.js`**), and **`defaultConvertToLlm`** register tools with the chat stream. **`createWordTools()`** (**`src/assistant-tools/index.js`**) exposes **`word_get_selection`**, **`word_get_document_outline`** (heading-level outline of the document body), **`word_search_text`**, and **`word_insert_markdown`**, in that order; **`mountChatPanel`** adds **`createPi4WordJavaScriptReplTool()`** after those Word tools. Tool descriptions in source are authoritative for parameters. For document edits, **`word_insert_markdown`** expects **`markdown`** (plain prose counts as Markdown) and **`where`**: **`after_selection`**, **`before_selection`**, **`replace_selection`**, or **`end_of_document`** (aliases **`after`**, **`before`**, **`replace`**, **`end`**, **`document_end`**). Optionally **`anchor_search_text`**, **`anchor_match_index`**, and **`anchor_search_options`** (Word **`SearchOptions`**: **`ignore_punct`**, **`match_wildcards`**, etc., per Microsoft’s [search-option guidance](https://learn.microsoft.com/en-us/office/dev/add-ins/word/search-option-guidance)) anchor **`insertHtml`** to the Nth body **`search`** hit instead of the current selection; **`word_search_text`** accepts the same **`search_options`** and reports counts and a preview. **`anchor_search_options`** must mirror **`search_options`** when both tools are used for the same anchor (details are spelled out on **`word_search_text`** and **`word_insert_markdown`** tool descriptions / parameter schema). **`word_get_selection`** runs **`Word.run`**, loads selection text, queues **`range.getHtml()`**, syncs, converts HTML to GFM with Turndown (falls back to **`range.text`** if conversion is empty but text is not). **`word_insert_markdown`** converts Markdown to sanitized HTML (including allowlisted task-list **`<input type="checkbox">`**) and **`insertHtml`** at the chosen location. Markdown from Word is **best-effort** (Word’s HTML is approximate per Microsoft’s API docs), not a guaranteed OOXML-round-trip.
-- **Sessions:** Session titles and autosave behavior for titles and persistence are handled in the task-pane layer (preview/save helpers).
-- **Static shell:** **`public/index.html`** provides **`#app-root`** with an initial boot placeholder, loads **`https://appsforoffice.microsoft.com/lib/1/hosted/office.js`**, then the ES module **`./index.min.js`** (with **`./index.min.css`** in **`head`**); **`manifest.xml`** defines the add-in manifest for Word (**`SourceLocation`** **`https://localhost:3000/public/index.html`**).
+## Runtime Model
+
+- **Entry:** `src/index.js` imports `./shims/office-alert.js` first, then pi-web-ui CSS, `src/index.css`, and `initializeTaskPane`.
+- **Boot:** `initializeTaskPane()` calls `scheduleOfficeBoot()`, which waits for `DOMContentLoaded` if needed, then `Office.onReady`.
+- **Fallback:** if `Office.onReady` is unavailable or does not complete within 2.5s, the UI still mounts with missing host context.
+- **Shell:** `renderApp()` clears `#app-root`, builds the header, toolbar, and `#chatMount`.
+- **Errors:** `src/index.js` installs `window` `error` and `unhandledrejection` handlers that surface boot failures in `#app-root`.
+- **Static HTML:** `public/index.html` provides `#app-root`, loads Office.js from `https://appsforoffice.microsoft.com/lib/1/hosted/office.js`, then loads `./index.min.js` as an ES module and `./index.min.css` in `head`.
+- **Manifest:** `manifest.xml` targets Word and points `SourceLocation` to `https://localhost:3000/public/index.html`.
+
+## Assistant Contract
+
+- **Prompt:** `SYSTEM_PROMPT` lives in `src/assistant/pi-assistant.js`.
+- **Agent:** `createWordAgent()` and `createWordAgentFromSession()` create pi-agent-core `Agent` instances using `defaultConvertToLlm`.
+- **Model default:** `getDefaultWordModel()` uses `DEFAULT_SETTINGS` from settings.
+- **API keys:** provider keys come from `getAppStorage().providerKeys`.
+- **Chat wiring:** `mountChatPanel()` creates `new ChatPanel()`, appends it to `#chatMount`, and calls `chatPanel.setAgent()`.
+- **Tool order:** `toolsFactory` returns `...createWordTools()` first, then `createPi4WordJavaScriptReplTool()`.
+- **Tool rendering:** `registerCollapsibleWordToolRenderers()` registers collapsible renderers for the Word tool names.
+- **Model picker:** `ModelSelector` updates `agent.state.model` and persists the preferred model.
+- **API-key prompt:** `ApiKeyPromptDialog.prompt(provider)` handles missing provider keys.
+
+Tool descriptions and parameter schemas in source are authoritative.
+
+## Word Tools
+
+`createWordTools()` lives in `src/assistant-tools/index.js` and returns these Word tools in order.
+
+| Tool | Source | Contract |
+| --- | --- | --- |
+| `word_get_selection` | `word-tool-get-selection.js` | Runs `Word.run`, loads selection text, queues `range.getHtml()`, syncs, converts Word HTML to GFM Markdown, and falls back to `range.text` if Markdown is empty but text is present. |
+| `word_get_document_outline` | `word-tool-get-document-outline.js` | Returns a table-of-contents-style outline from document body paragraphs using built-in Heading 1-9 styles and/or outline levels 1-9. |
+| `word_search_text` | `word-tool-search-text.js` | Searches the document body with Word `search`, accepts optional `search_options`, and returns match count plus a preview for the selected `match_index`. |
+| `word_insert_markdown` | `word-tool-insert-markdown.js` | Converts Markdown to sanitized HTML and inserts it using Word `insertHtml` at the requested placement or search anchor. |
+
+### `word_insert_markdown`
+
+Required parameters:
+
+- `markdown`: Markdown to render and insert. Plain prose counts as Markdown.
+- `where`: `after_selection`, `before_selection`, `replace_selection`, or `end_of_document`.
+
+Accepted `where` aliases:
+
+- `after` -> `after_selection`
+- `before` -> `before_selection`
+- `replace` -> `replace_selection`
+- `end` / `document_end` -> `end_of_document`
+
+Optional search anchoring parameters:
+
+- `anchor_search_text`
+- `anchor_match_index`
+- `anchor_search_options`
+
+When `anchor_search_text` is non-empty and `where` is not `end_of_document`, insertion targets the Nth body search hit instead of the current selection.
+
+### Search Options
+
+`word_search_text.search_options` and `word_insert_markdown.anchor_search_options` accept Word `SearchOptions` flags in snake_case:
+
+- `ignore_punct`
+- `ignore_space`
+- `match_case`
+- `match_prefix`
+- `match_suffix`
+- `match_whole_word`
+- `match_wildcards`
+
+When an insert is anchored from a prior search, `anchor_search_options` must mirror the original `search_options`; mismatched flags can target a different occurrence. Word wildcard and search behavior follows Microsoft's [search-option guidance](https://learn.microsoft.com/en-us/office/dev/add-ins/word/search-option-guidance).
+
+### Markdown And HTML
+
+- Markdown insertion uses `marked` and DOMPurify.
+- GFM task-list `<input type="checkbox">` is allowlisted for insertion.
+- Markdown readback from Word is best-effort because Word HTML is approximate, not an OOXML round trip.
+
+## JavaScript REPL Tool
+
+`createPi4WordJavaScriptReplTool()` lives in `src/assistant-tools/javascript-repl-tool.js` and wraps pi-web-ui's `javascript_repl`.
+
+Contract differences from the upstream tool:
+
+- The schema remains a single root object.
+- `title` is required.
+- `code` is accepted.
+- `script` is accepted as an alias for `code`.
+- At least one of `code` or `script` must be a non-empty string.
+
+## Settings And Storage
+
+- **Storage backend:** `initPiWebStorage()` creates pi-web-ui `AppStorage` with IndexedDB-backed settings, provider keys, sessions, and custom providers.
+- **Legacy migration:** `migrateLegacyLocalStorageOnce()` may migrate `pi4word.settings.v1` from `localStorage` into provider keys, preferred model keys, and Pi4Word stream proxy settings.
+- **Preferred model:** stored in AppStorage settings as `pi4word.chat.preferredProvider` and `pi4word.chat.preferredModelId`.
+- **Preferred thinking level:** stored in AppStorage settings as `pi4word.chat.preferredThinkingLevel` and mirrored to `localStorage` as a synchronous embedded-host fallback/cache because IndexedDB writes may not finish before unload.
+- **CORS proxy:** pi-web-ui proxy settings use `proxy.enabled` and `proxy.url`.
+- **Pi stream proxy:** Pi4Word settings use `pi4word.streamProxy.enabled`, `pi4word.streamProxy.url`, and `pi4word.streamProxy.token`.
+
+## Networking
+
+LLM traffic uses `createPi4WordStreamFn()` in `src/assistant/pi-assistant.js`.
+
+- If Pi4Word stream proxy is enabled and both URL and token are present, requests use `streamProxy` from `@mariozechner/pi-agent-core`.
+- The stream proxy URL is passed as `proxyUrl`; the token is passed as `authToken`.
+- Otherwise requests use pi-web-ui `createStreamFn()` with the optional CORS proxy URL.
+- This repository does not ship a backend. Production deployments must provide their own stream proxy endpoint when secure server-side key handling is required.
+
+## Build And Assets
+
+- `scripts/esbuild.mjs` bundles `src/index.js` to `public/index.min.js`.
+- CSS is emitted to `public/index.min.css`.
+- `office-js` is external.
+- `process` is supplied by the esbuild inject/alias path `src/shims/process.js`.
+- KaTeX font assets are emitted under `public/assets/`.
+- `scripts/esbuild.mjs` copies `node_modules/pdfjs-dist/build/pdf.worker.min.mjs` to `public/pdfjs-dist/build/pdf.worker.min.mjs` so pi-web-ui can load the PDF.js worker beside the bundle.
+- The bundle includes `marked`, DOMPurify, Turndown, and `turndown-plugin-gfm`.
+
+## Source Boundaries
+
+- Feature code lives under `src/<feature>/`.
+- `src/task-pane/` is the composition root for assistant, settings, and pi-web-ui.
+- `src/index.js` imports `src/task-pane/index.js` as the only feature entry, plus entry shims and styles.
+- `task-pane` consumes `assistant` and `settings` only through their `index.js` barrels.
+- The `assistant` barrel exposes agent creation, `createWordTools()`, `createPi4WordJavaScriptReplTool()`, and `registerCollapsibleWordToolRenderers()`.
+- `src/assistant-tools/index.js` exposes tool factories for tests or custom tool sets.

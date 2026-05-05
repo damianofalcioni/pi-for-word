@@ -3,8 +3,8 @@
  * preferred chat model helpers, and pi-web-ui IndexedDB bootstrap plus one-time legacy
  * `localStorage` migration (`initPiWebStorage`, `migrateLegacyLocalStorageOnce`).
  *
- * Side effects: IndexedDB via bootstrap; legacy path reads/writes only through injected storage.
- * Other settings helpers (e.g. legacy key shape) live in sibling modules and are not re-exported here.
+ * Side effects: IndexedDB via bootstrap; legacy path reads/writes only through injected storage;
+ * preferred thinking level mirrors to localStorage as an unload fallback.
  *
  * @module settings
  */
@@ -19,10 +19,12 @@ export {
 export {
   attachPreferredThinkingLevelPersistence,
   attachPreferredThinkingLevelUnloadSync,
+  isThinkingLevel,
   loadPreferredThinkingLevel,
   peekPreferredThinkingLevelLocal,
   persistPreferredThinkingLevel,
   PREFERRED_THINKING_LEVEL_KEY,
   stashPreferredThinkingLevelLocal,
 } from "./preferred-thinking-level.js";
+export { DEFAULT_SETTINGS } from "./settings-storage.js";
 export { initPiWebStorage, migrateLegacyLocalStorageOnce } from "./pi-web-bootstrap.js";
